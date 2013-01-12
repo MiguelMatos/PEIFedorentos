@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="View"
+            id="PeiFedorentos">
+      </category>
+      <view
+            name="Smells View"
+            icon="icons/sample.gif"
+            category="PeiFedorentos"
+            class="peifedorentos.views.CodeSmellsView"
+            id="peifedorentos.views.CodeSmellsView">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <view
+               ratio="0.5"
+               relative="org.eclipse.ui.views.TaskList"
+               visible="true"
+               relationship="stack"
+               id="peifedorentos.views.CodeSmellsView">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            description="Detect Smells"
+            id="SmellDetector"
+            label="Detect Smells"
+            visible="true">
+         <menu
+               id="SmellDetector"
+               label="SmellDetector">
+            <separator
+                  name="PEIFedorentos">
+            </separator>
+         </menu>
+         <action
+               class="refactor.RefactorAction"
+               icon="icons/helloworld.gif"
+               id="refactor.RefactorAction"
+               label="SmellDetector"
+               menubarPath="AppDeodorizer/App"
+               toolbarPath="Normal"
+               tooltip="Press to detect">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>
