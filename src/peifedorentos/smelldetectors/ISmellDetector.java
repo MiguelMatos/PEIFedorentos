@@ -1,12 +1,14 @@
 package peifedorentos.smelldetectors;
 
-import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import peifedorentos.ISmell;
+
+import peifedorentos.smells.ISmell;
 
 public interface ISmellDetector extends Runnable  {
 	
-	void snifCode(CompilationUnit unit);
-	ArrayList<ISmell> getSmells();
+	void snifCode(List<CompilationUnit> unit);
+	List<ISmell> getSmells();
 	boolean isComplete();
 }

@@ -11,6 +11,9 @@ import org.eclipse.ui.*;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
 
+import peifedorentos.refactor.structures.FactoryCreator;
+import peifedorentos.smells.ISmell;
+
 
 /**
  * This sample class demonstrates how to plug-in a new
@@ -37,7 +40,7 @@ public class CodeSmellsView extends ViewPart {
 	 */
 	public static final String ID = "peifedorentos.views.CodeSmellsView";
 
-	private TableViewer viewer;
+	private static TableViewer viewer;
 	private Action action1;
 	private Action action2;
 	private Action doubleClickAction;
@@ -52,15 +55,7 @@ public class CodeSmellsView extends ViewPart {
 	 * (like Task List, for example).
 	 */
 	 
-	class ViewContentProvider implements IStructuredContentProvider {
-		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
-		}
-		public void dispose() {
-		}
-		public Object[] getElements(Object parent) {
-			return new String[] { "One", "Two", "Three" };
-		}
-	}
+	
 	class ViewLabelProvider extends LabelProvider implements ITableLabelProvider {
 		public String getColumnText(Object obj, int index) {
 			return getText(obj);
@@ -88,7 +83,7 @@ public class CodeSmellsView extends ViewPart {
 	 */
 	public void createPartControl(Composite parent) {
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		viewer.setContentProvider(new ViewContentProvider());
+		viewer.setContentProvider(new SmellsContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		viewer.setSorter(new NameSorter());
 		viewer.setInput(getViewSite());
@@ -96,6 +91,10 @@ public class CodeSmellsView extends ViewPart {
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
+	}
+	
+	public static void update() {
+		viewer.refresh(true);
 	}
 
 	private void hookContextMenu() {
@@ -159,6 +158,12 @@ public class CodeSmellsView extends ViewPart {
 			public void run() {
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				
+				ISmell smell = (ISmell)obj;
+				
+				FactoryCreator fc = new FactoryCreator();
+				fc.CreateFactory("Factories", "TesteFactory", "Teste");
+				
 				showMessage("Double-click detected on "+obj.toString());
 			}
 		};

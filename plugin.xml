@@ -44,11 +44,11 @@
             </separator>
          </menu>
          <action
-               class="refactor.RefactorAction"
+               class="peifedorentos.StartProcessAction"
                icon="icons/helloworld.gif"
-               id="refactor.RefactorAction"
+               id="peifedorentos.StartProcessAction"
                label="SmellDetector"
-               menubarPath="AppDeodorizer/App"
+               menubarPath="PeiFedorentos/App"
                toolbarPath="Normal"
                tooltip="Press to detect">
          </action>
