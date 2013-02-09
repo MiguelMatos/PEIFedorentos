@@ -2,16 +2,26 @@ package peifedorentos.visitors;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
 
+import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
 import peifedorentos.smells.Smell;
 import peifedorentos.smells.SmellTypes;
@@ -19,21 +29,44 @@ import peifedorentos.smells.SmellTypes;
 public class ClassInstanceCreationVisitor extends ASTVisitor {
 
 	private CompilationUnit unit;
-	private ArrayList<ISmell> detectedSmells;
+	private ArrayList<DependencyCreationSmell> detectedSmells;
 	private List<String> projectObjects;
 	private String currentMethod;
 	private String className;
 	private String fileName;
+	private Map<String, Name> imports;
+	private Name packageDec;
 	
 	public ClassInstanceCreationVisitor(CompilationUnit unit, String className, String fileName, List<String> projectObjects) {
 		this.unit = unit;
-		this.detectedSmells = new ArrayList<ISmell>();
+		this.detectedSmells = new ArrayList<DependencyCreationSmell>();
 		this.projectObjects = projectObjects;
 		this.className = className;
 		this.fileName = fileName;
+		this.imports = new HashMap<String, Name>();
+	}
+	
+	@Override  
+	public boolean visit(PackageDeclaration node) {
+		this.packageDec = node.getName();
+		return true;
 	}
 	
 
+	@Override  
+	public boolean visit(ImportDeclaration node) {
+		
+		Name importName = node.getName();
+		
+		String key;
+		if (importName instanceof QualifiedName)
+			key = ((QualifiedName)importName).getName().toString();
+		else
+			key = ((SimpleName)importName).toString();
+		
+		this.imports.put(key, importName);
+		return true;
+	}
 	
 	@Override  
 	public boolean visit(ClassInstanceCreation node) {
@@ -46,10 +79,20 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 		
 		String st = simpleType.getName().getFullyQualifiedName();
 		
+		Name importName = this.imports.get(st);
+		
+		if (importName == null) {
+			
+			AST ast = AST.newAST(AST.JLS3);
+			
+				importName = ast.newQualifiedName(ast.newSimpleName(this.packageDec.getFullyQualifiedName()), ast.newSimpleName(st));
+
+		}
+		
 		if (this.projectObjects.contains(st)) {
 			int lineNumber = this.unit.getLineNumber(node.getStartPosition());
-			ISmell smell = new Smell(SmellTypes.InstanceCreation, this.className, 
-					this.currentMethod, this.fileName, lineNumber, unit);
+			DependencyCreationSmell smell = new DependencyCreationSmell(SmellTypes.InstanceCreation, this.className, 
+					this.currentMethod, this.fileName, st, importName, lineNumber, unit);
 			this.detectedSmells.add(smell);
 		}
 		
@@ -82,8 +125,11 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 		}
 	}
 	
-	public List<ISmell> getDetectedSmells() {
+	public List<DependencyCreationSmell> getDetectedSmells() {
 		return this.detectedSmells;
 	}
 	
+	public Name getPackage() {
+		return packageDec;
+	}
 }

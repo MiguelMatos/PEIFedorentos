@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
 
 import peifedorentos.refactor.structures.FactoryCreator;
+import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
 
 
@@ -161,10 +162,15 @@ public class CodeSmellsView extends ViewPart {
 				
 				ISmell smell = (ISmell)obj;
 				
+				if (smell instanceof DependencyCreationSmell)
+				{
 				FactoryCreator fc = new FactoryCreator();
-				fc.CreateFactory("Factories", "TesteFactory", "Teste");
+				fc.CreateFactory("Factories", ((DependencyCreationSmell)(smell)).getClassDependencyName()+ "Factory",
+						((DependencyCreationSmell)(smell)).getClassDependencyName(),
+						((DependencyCreationSmell)(smell)).getClassDependencyNamespace());
 				
 				showMessage("Double-click detected on "+obj.toString());
+				}
 			}
 		};
 	}

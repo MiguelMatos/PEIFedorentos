@@ -15,7 +15,7 @@ public class NewClassSmellDetector implements ISmellDetector {
 	
 	private boolean isWorking = false;
 	private List<ISmell> detectedSmells = new ArrayList<ISmell>();
-	private List<CompilationUnit> units;
+	private List<ClassInformation> units;
 
 
 	@Override
@@ -25,12 +25,14 @@ public class NewClassSmellDetector implements ISmellDetector {
 		
 		List<String> projectObjects = getProjectObjects();
 		
-		for (CompilationUnit unit : units)
+		for (ClassInformation unit : units)
 		{
-			ClassInstanceCreationVisitor visitor = new ClassInstanceCreationVisitor(unit, "", "",
+			ClassInstanceCreationVisitor visitor = new ClassInstanceCreationVisitor(
+					unit.compilationUnit, unit.iCompilationUnit.getElementName(), 
+					unit.iCompilationUnit.getElementName() + ".java",
 					projectObjects);
 			
-			unit.accept(visitor);
+			unit.compilationUnit.accept(visitor);
 			this.detectedSmells.addAll(visitor.getDetectedSmells());
 		}
 		
@@ -38,7 +40,7 @@ public class NewClassSmellDetector implements ISmellDetector {
 	}
 
 	@Override
-	public void snifCode(List<CompilationUnit> units) {
+	public void snifCode(List<ClassInformation> units) {
 		this.units = units;
 		run();
 	}

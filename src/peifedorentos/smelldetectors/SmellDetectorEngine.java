@@ -26,7 +26,7 @@ public class SmellDetectorEngine {
 		
 		
 		
-		List<CompilationUnit> compilationUnits = parse(cus);
+		List<ClassInformation> compilationUnits = parse(cus);
 		
 		for(ISmellDetector smellDetector : smellDetectors) {
 				smellDetector.snifCode(compilationUnits);
@@ -41,16 +41,16 @@ public class SmellDetectorEngine {
 	
 	}
 	
-	private List<CompilationUnit> parse(List<ICompilationUnit> units) {
+	private List<ClassInformation> parse(List<ICompilationUnit> units) {
 		
-		ArrayList<CompilationUnit> cus = new ArrayList<CompilationUnit>();
+		ArrayList<ClassInformation> cus = new ArrayList<ClassInformation>();
 		for (ICompilationUnit unit : units)  {
 		
 		ASTParser parser = ASTParser.newParser(AST.JLS3);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(unit);
 		parser.setResolveBindings(true);
-		cus.add((CompilationUnit) parser.createAST(null));
+		cus.add(new ClassInformation(unit, (CompilationUnit) parser.createAST(null)));
 		
 		}
 		

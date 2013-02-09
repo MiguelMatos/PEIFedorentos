@@ -8,7 +8,7 @@ import peifedorentos.smells.ISmell;
 
 public interface ISmellDetector extends Runnable  {
 	
-	void snifCode(List<CompilationUnit> unit);
+	void snifCode(List<ClassInformation> unit);
 	List<ISmell> getSmells();
 	boolean isComplete();
 }

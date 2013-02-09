@@ -36,7 +36,7 @@ public class ActiveEditor {
 	private IFile file; // the current open file.
 	private ICompilationUnit compilationUnit;
 	private IJavaProject javaProject;
-
+	private IProject project;
 
 
 	public ActiveEditor() {
@@ -48,7 +48,7 @@ public class ActiveEditor {
 		ISelection select = editor.getSelectionProvider().getSelection(); // the selected text.
 		textSelect = (ITextSelection) select; // get the text selected.
 		file = (IFile) part.getEditorInput().getAdapter(IFile.class); // get the file
-		IProject project = file.getProject();
+		project = file.getProject();
 		try {
 			if(project.isNatureEnabled("org.eclipse.jdt.core.javanature")) {
 				javaProject = JavaCore.create(project);
@@ -57,6 +57,10 @@ public class ActiveEditor {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public IProject getProject() {
+		return project;
 	}
 	
 
