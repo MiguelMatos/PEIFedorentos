@@ -1,17 +1,12 @@
 package peifedorentos.refactor.structures;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -23,25 +18,24 @@ import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.jdt.internal.corext.dom.ASTFlattener;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
+import org.eclipse.jdt.internal.corext.dom.ASTFlattener;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 
 import peifedorentos.Activator;
 import peifedorentos.util.ActiveEditor;
 
+@SuppressWarnings("restriction")
 public class FactoryCreator {
 
 	private AST ast;
 	CompilationUnit unit;
 
+	@SuppressWarnings("unchecked")
 	public void CreateFactory(String packageName, String className,
 			String typeName, Name importName) {
 		ast = AST.newAST(AST.JLS3);
@@ -101,6 +95,7 @@ public class FactoryCreator {
 
 	}
 
+	@SuppressWarnings("restriction")
 	private void saveFile(String fileName) {
 		try {
 			ASTFlattener fl = new ASTFlattener();
