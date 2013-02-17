@@ -12,12 +12,19 @@ import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.MalformedTreeException;
 
-import peifedorentos.util.EditorController;
+import peifedorentos.refactor.Refactorer;
+import peifedorentos.refactor.dependencyCreator.RefactorerDependencyCreation;
+import peifedorentos.smells.ISmell;
 
 
 
 public class RefactorPreview extends Refactoring {
 
+	private ISmell smell;
+	
+	public RefactorPreview(ISmell smell) {
+		this.smell = smell;
+	}
 	
 	protected Change change;
 	@Override
@@ -27,10 +34,10 @@ public class RefactorPreview extends Refactoring {
 		try {
 			monitor.beginTask("Checking checkFinalConditions...", 2);
 			
-			EditorController ec = new EditorController();
-			ICompilationUnit unit = ec.getCompilationUnit();
+						
+			Refactorer ref =  new RefactorerDependencyCreation(smell);
+			change = ref.doRefactor(monitor);
 			
-			//Refactor ref = new Refactor(unit);
 			
 			
 						

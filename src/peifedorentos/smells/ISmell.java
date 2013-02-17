@@ -2,6 +2,9 @@ package peifedorentos.smells;
 
 import java.util.List;
 
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public interface ISmell {
@@ -21,5 +24,8 @@ public interface ISmell {
 	public SmellTypes getSmellType();
 	
 	public CompilationUnit getCompilationUnit();
+	
+	public ICompilationUnit getICompilationUnit();
 
+	public ASTNode getNodeWithSmell();
 }

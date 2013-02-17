@@ -1,5 +1,7 @@
 package peifedorentos.smells;
 
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Name;
 
@@ -10,8 +12,8 @@ public class DependencyCreationSmell extends Smell {
 	
 	public DependencyCreationSmell(SmellTypes smellType, String className,
 			String methodName, String fileName, String classDependencyName, Name namespace,
-			int line, CompilationUnit cu) {
-		super(smellType, className, methodName, fileName, line, cu);
+			int line, CompilationUnit cu, ICompilationUnit iCompilationUnit, ASTNode nodeWithSmell) {
+		super(smellType, className, methodName, fileName, line, cu, iCompilationUnit, nodeWithSmell);
 
 		this.classDependencyName = classDependencyName;
 		this.classDependencyNamespace = namespace;

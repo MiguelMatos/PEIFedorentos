@@ -6,14 +6,18 @@ import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.ui.*;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
 
+import peifedorentos.refactor.Refactorer;
+import peifedorentos.refactor.dependencyCreator.RefactorerDependencyCreation;
 import peifedorentos.refactor.structures.FactoryCreator;
+import peifedorentos.refactor.ui.RefactorDataWizzard;
+import peifedorentos.refactor.ui.RefactorPreview;
 import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
-
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
  * shows data obtained from the model. The sample creates a dummy model on the
@@ -161,15 +165,18 @@ public class CodeSmellsView extends ViewPart {
 				ISmell smell = (ISmell) obj;
 
 				if (smell instanceof DependencyCreationSmell) {
-					FactoryCreator fc = new FactoryCreator();
 					
-					DependencyCreationSmell depSmell =((DependencyCreationSmell) (smell));
-					fc.CreateFactory(
-							"Factories",
-							depSmell.getClassDependencyName() + "Factory",
-							depSmell.getClassDependencyName(),
-							depSmell.getClassDependencyNamespace());
-
+					RefactorPreview ref = new RefactorPreview(smell);
+					RefactorDataWizzard wizard = new RefactorDataWizzard(ref, "PeiFedorentos");
+					RefactoringWizardOpenOperation operation= new RefactoringWizardOpenOperation(wizard);
+					try {
+						operation.run(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Refactor");
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
 					showMessage("Factory Created");
 				}
 			}

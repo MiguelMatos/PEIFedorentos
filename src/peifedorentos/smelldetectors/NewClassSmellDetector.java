@@ -27,9 +27,7 @@ public class NewClassSmellDetector implements ISmellDetector {
 		
 		for (ClassInformation unit : units)
 		{
-			ClassInstanceCreationVisitor visitor = new ClassInstanceCreationVisitor(
-					unit.compilationUnit, unit.iCompilationUnit.getElementName(), 
-					unit.iCompilationUnit.getElementName() + ".java",
+			ClassInstanceCreationVisitor visitor = new ClassInstanceCreationVisitor(unit,
 					projectObjects);
 			
 			unit.compilationUnit.accept(visitor);

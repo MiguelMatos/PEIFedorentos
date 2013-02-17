@@ -71,7 +71,7 @@ public class FactoryCreator {
 		method.setConstructor(false);
 		method.modifiers().add(
 				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-		method.setName(ast.newSimpleName("create" + typeName));
+		method.setName(ast.newSimpleName("CreateInstance"));
 		method.setReturnType2(ast.newSimpleType(ast.newSimpleName(typeName)));
 
 		Block body = ast.newBlock();

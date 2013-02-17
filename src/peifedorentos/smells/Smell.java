@@ -3,6 +3,9 @@ package peifedorentos.smells;
 import java.util.ArrayList;
 import java.util.List;
 
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class Smell implements ISmell  {
@@ -14,9 +17,11 @@ public class Smell implements ISmell  {
 	private int lineNumber;
 	private List<ISmell> relatedSmells;
 	private SmellTypes smellType;
-	private CompilationUnit compilationUnit; 
+	private CompilationUnit compilationUnit;
+	private ICompilationUnit iCompilationUnit;
+	private ASTNode nodeWithSmell;
 	
-	public Smell(SmellTypes smellType, String className, String methodName, String fileName, int line, CompilationUnit cu)
+	public Smell(SmellTypes smellType, String className, String methodName, String fileName, int line, CompilationUnit cu, ICompilationUnit icu, ASTNode node)
 	{
 		this.smellType = smellType;
 		this.className = className;
@@ -24,6 +29,8 @@ public class Smell implements ISmell  {
 		this.fileName = fileName;
 		this.lineNumber = line;
 		this.compilationUnit = cu;
+		this.iCompilationUnit = icu;
+		this.nodeWithSmell = node;
 	}
 
 	/* (non-Javadoc)
@@ -70,6 +77,9 @@ public class Smell implements ISmell  {
 	public List<ISmell> getRelatedSmells() {
 		return relatedSmells;
 	}
+	
+	
+	
 	public void setRelatedSmells(List<ISmell> relatedSmells) {
 		this.relatedSmells = relatedSmells;
 	}
@@ -114,6 +124,15 @@ public class Smell implements ISmell  {
 	public CompilationUnit getCompilationUnit() {
 		
 		return this.compilationUnit;
+	}
+	
+	public ASTNode getNodeWithSmell() {
+		return this.nodeWithSmell;
+	}
+
+	@Override
+	public ICompilationUnit getICompilationUnit() {
+		return this.iCompilationUnit;
 	}
 	
 	

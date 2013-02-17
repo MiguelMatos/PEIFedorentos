@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
+
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Name;
@@ -21,30 +22,26 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
 
+import peifedorentos.smelldetectors.ClassInformation;
 import peifedorentos.smells.DependencyCreationSmell;
-import peifedorentos.smells.ISmell;
-import peifedorentos.smells.Smell;
 import peifedorentos.smells.SmellTypes;
 
 public class ClassInstanceCreationVisitor extends ASTVisitor {
 
-	private CompilationUnit unit;
 	private ArrayList<DependencyCreationSmell> detectedSmells;
 	private List<String> projectObjects;
 	private String currentMethod;
-	private String className;
-	private String fileName;
 	private Map<String, Name> imports;
 	private Name packageDec;
+	private ClassInformation classInformation;
 	
-	public ClassInstanceCreationVisitor(CompilationUnit unit, String className, String fileName, List<String> projectObjects) {
-		this.unit = unit;
-		this.detectedSmells = new ArrayList<DependencyCreationSmell>();
+	public ClassInstanceCreationVisitor(ClassInformation classInformation, List<String> projectObjects) {
+		this.classInformation =classInformation;
 		this.projectObjects = projectObjects;
-		this.className = className;
-		this.fileName = fileName;
+		this.detectedSmells = new ArrayList<DependencyCreationSmell>();
 		this.imports = new HashMap<String, Name>();
 	}
+	
 	
 	@Override  
 	public boolean visit(PackageDeclaration node) {
@@ -90,9 +87,10 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 		}
 		
 		if (this.projectObjects.contains(st)) {
-			int lineNumber = this.unit.getLineNumber(node.getStartPosition());
-			DependencyCreationSmell smell = new DependencyCreationSmell(SmellTypes.InstanceCreation, this.className, 
-					this.currentMethod, this.fileName, st, importName, lineNumber, unit);
+			int lineNumber = this.classInformation.compilationUnit.getLineNumber(node.getStartPosition());
+			DependencyCreationSmell smell = new DependencyCreationSmell(SmellTypes.InstanceCreation, this.classInformation.iCompilationUnit.getElementName(), 
+					this.currentMethod, this.classInformation.iCompilationUnit.getElementName() + ".java", st, importName, 
+					lineNumber, this.classInformation.compilationUnit, this.classInformation.iCompilationUnit, node);
 			this.detectedSmells.add(smell);
 		}
 		
