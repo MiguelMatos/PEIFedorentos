@@ -21,6 +21,7 @@ import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
@@ -47,12 +48,12 @@ public class RefactorerDependencyCreation extends Refactorer {
 			
 	@Override
 	public Change doRefactor(IProgressMonitor monitor) {
-		CompilationUnit compilationUnit = super.getCompilationUnit();
 		ISmell smell = super.getSmell();
 		ASTRewrite refactoredAST = super.getRewritedAST();
-		RefactorHelper helper = new RefactorHelper(refactoredAST.getAST());
+	//	RefactorHelper helper = new RefactorHelper(refactoredAST.getAST());
 		String source;
 		try {
+			
 			source = smell.getICompilationUnit().getSource();
 		
 		Document document = new Document(source);
@@ -60,23 +61,25 @@ public class RefactorerDependencyCreation extends Refactorer {
 		if (!(smell instanceof DependencyCreationSmell))
 			return null;
 		
-		ASTNode node = smell.getNodeWithSmell();
-		MethodDeclaration method = helper.GetMethodDeclarationParent(node);
 		
-	
+		//ASTNode node = smell.getNodeWithSmell();
 		
-		IMethodBinding binding = method.resolveBinding();
-		IMethod javaMethod = (IMethod) binding.getJavaElement();
 		
-		MethodCallerFinder mcf = new MethodCallerFinder();
-		HashSet<IMethod> callers = mcf.getCallersOf(javaMethod);
+		//MethodDeclaration method = helper.GetMethodDeclarationParent(node);
+		
+		
+	//	IMethodBinding binding = method.resolveBinding();
+	//	IMethod javaMethod = (IMethod) binding.getJavaElement();
+		
+//		MethodCallerFinder mcf = new MethodCallerFinder();
+//		HashSet<IMethod> callers = mcf.getCallersOf(javaMethod);
 
 //		FactoryCreator fc = new FactoryCreator();
 //		
 //		
 //		//Create factory
-	DependencyCreationSmell dcSmell = (DependencyCreationSmell) smell; 
-		String factoryName = dcSmell.getClassDependencyName() + "Factory";
+	//DependencyCreationSmell dcSmell = (DependencyCreationSmell) smell; 
+	//	String factoryName = dcSmell.getClassDependencyName() + "Factory";
 //		fc.CreateFactory(
 //				"Factories",
 //				factoryName,
@@ -85,17 +88,17 @@ public class RefactorerDependencyCreation extends Refactorer {
 		
 		
 		
-		method.parameters().add(helper.CreateSingleVariableDeclaration("factory" + factoryName, factoryName));
+		//method.parameters().add(helper.CreateSingleVariableDeclaration("factory" + factoryName, factoryName));
 		
-		VariableDeclarationFragment frag = helper.GetVariableDeclariationFragmentParent(node);
 		
-		MethodInvocation methodInv = helper.CreateMethodInvocation("factory" + factoryName, "CreateInstance");
 		
-		frag.setInitializer(methodInv);
-		
+		//VariableDeclarationFragment frag = helper.GetVariableDeclariationFragmentParent(node);
+		//MethodInvocation methodInv = helper.CreateMethodInvocation("factory" + factoryName, "CreateInstance");
+		//refactoredAST.replace(frag.getInitializer(), methodInv, null);
+
 		
 		ICompilationUnit unit = smell.getICompilationUnit();
-		TextEdit res = refactoredAST.rewriteAST(document, smell.getICompilationUnit()
+		TextEdit res = refactoredAST.rewriteAST(document, unit
 				.getJavaProject().getOptions(true));
 
 		res.apply(document);
@@ -104,15 +107,17 @@ public class RefactorerDependencyCreation extends Refactorer {
 
 			
 		   // update of the compilation unit
-		unit.getBuffer().setContents(newSource);
+		//unit.getBuffer().setContents(newSource);
 
-		unit.reconcile(ICompilationUnit.NO_AST,false,null, null);
+		//unit.reconcile(ICompilationUnit.NO_AST,false,null, null);
 		IFile file=(IFile)unit.getResource();
 	
-		FileChangeHelper fch = new FileChangeHelper();
+		//FileChangeHelper fch = new FileChangeHelper();
 		
-		
-		return fch.newCu("method1", source, monitor, unit);
+		TextFileChange change= new TextFileChange(unit.getElementName(), file);		
+		return change;
+		//return fch.newCu("method1", source, monitor, unit);
+		//return fch.createTextFileChange(document, smell.getCompilationUnit(), unit);
 		} catch (MalformedTreeException | BadLocationException | OperationCanceledException | CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

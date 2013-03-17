@@ -86,5 +86,24 @@ public class RefactorHelper {
 		
 		return null;
 	}
+
+
+
+
+	public MethodDeclaration CreateMethodDeclaration(MethodDeclaration method) {
+		
+		return (MethodDeclaration) ASTNode.copySubtree(ast, method);
+	}
+
+
+
+
+	public VariableDeclarationFragment CreateVariableDeclarationFragment(
+			VariableDeclarationFragment oldVarDecFrag) {
+		return (VariableDeclarationFragment) ASTNode.copySubtree(ast, oldVarDecFrag);
+		
+	}
+	
+	
 	
 }

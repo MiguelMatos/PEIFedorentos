@@ -6,7 +6,13 @@ import java.io.InputStream;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -36,8 +42,8 @@ public class FactoryCreator {
 	CompilationUnit unit;
 
 	@SuppressWarnings("unchecked")
-	public void CreateFactory(String packageName, String className,
-			String typeName, Name importName) {
+	public ICompilationUnit CreateFactory(String packageName, String className,
+			String typeName, Name importName) throws JavaModelException {
 		ast = AST.newAST(AST.JLS3);
 		unit = ast.newCompilationUnit();
 
@@ -89,10 +95,34 @@ public class FactoryCreator {
 
 		unit.types().add(type);
 
+		ASTFlattener fl = new ASTFlattener();
+		unit.accept(fl);
+	
+		String code = fl.getResult();
+		CodeFormatter cf = new DefaultCodeFormatter();
+		TextEdit te = cf.format(CodeFormatter.K_UNKNOWN, code, 0,
+				code.length(), 0, null);
+		
+		ActiveEditor ae = new ActiveEditor();
+		IJavaProject proj = (IJavaProject) ae.getProject();
+		IPackageFragmentRoot[] frags = proj.getAllPackageFragmentRoots();
+		
+		IPackageFragmentRoot root = null;
+		for(IPackageFragmentRoot frag : frags) {
+			if (frag.getKind() == IPackageFragmentRoot.K_SOURCE) {
+				root = frag;
+				break;
+			}
+		}
+		
+		
+		IPackageFragment packFrag = root.createPackageFragment(packageName, true, null);
+		
+		ICompilationUnit cu = packFrag.createCompilationUnit(className + ".java", code, false, null);
 		// body.statements().add(body);
 
-		saveFile(className + ".java");
-
+		//saveFile(className + ".java");
+		return cu;
 	}
 
 	@SuppressWarnings("restriction")
@@ -100,6 +130,7 @@ public class FactoryCreator {
 		try {
 			ASTFlattener fl = new ASTFlattener();
 			unit.accept(fl);
+		
 			String code = fl.getResult();
 			CodeFormatter cf = new DefaultCodeFormatter();
 			TextEdit te = cf.format(CodeFormatter.K_UNKNOWN, code, 0,

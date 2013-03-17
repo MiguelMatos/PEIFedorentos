@@ -58,14 +58,14 @@ public class FileChangeHelper {
 											 String code, 
 											 IProgressMonitor monitor,
 											 ICompilationUnit cu
-											// WorkingCopyOwner workingCopyOwner 
+											//WorkingCopyOwner workingCopyOwner 
 											 ) 
 												throws 	CoreException,	
 														OperationCanceledException{
 	
 		CreateCompilationUnitChange newCu=null;
 		ICompilationUnit copy=cu.getWorkingCopy(monitor);
-//		ICompilationUnit copy=cu.findWorkingCopy(workingCopyOwner);
+//ICompilationUnit copy=cu.findWorkingCopy(workingCopyOwner);
 //		if(copy==null){
 //			copy=cu.getWorkingCopy(workingCopyOwner, monitor);
 //		}
