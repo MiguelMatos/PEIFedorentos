@@ -4,21 +4,33 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IPackageDeclaration;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
@@ -27,13 +39,24 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.ChangeDescriptor;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.DocumentChange;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringChangeDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.TextChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -41,6 +64,7 @@ import org.eclipse.text.edits.TextEdit;
 
 import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.refactor.structures.FactoryCreator;
+import peifedorentos.smelldetectors.ClassInformation;
 import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
 import peifedorentos.smells.SmellTypes;
@@ -49,57 +73,57 @@ import peifedorentos.visitors.ClassInstanceCreationVisitor;
 
 public class DependencyCreationRefactoring extends Refactoring {
 
-	private Map<ICompilationUnit, TextFileChange> changes= null;
+	private Map<ICompilationUnit, TextFileChange> changes = null;
 	private DependencyCreationSmell smell;
-	
+
 	private String factoryTypeName = "Roda";
 	private final String factoryVarName = "factory";
 	private boolean updateAllReferences = true;
 	private boolean newFactory = false;
-	
+
 	private ASTRewrite rewrite;
 	private RefactorHelper helper;
-	
+
 	public DependencyCreationRefactoring(ISmell smell) {
 		this.smell = (DependencyCreationSmell) smell;
 		this.changes = new LinkedHashMap<ICompilationUnit, TextFileChange>();
-		this.rewrite = ASTRewrite.create(this.smell.getCompilationUnit().getAST());
-		
+		this.rewrite = ASTRewrite.create(this.smell.getCompilationUnit()
+				.getAST());
+
 		this.helper = new RefactorHelper(smell.getCompilationUnit().getAST());
-	
+
 	}
-	
-	
+
 	@Override
 	public RefactoringStatus checkFinalConditions(IProgressMonitor monitor)
 			throws CoreException, OperationCanceledException {
 		// TODO Auto-generated method stub
-		final RefactoringStatus status= new RefactoringStatus();
+		final RefactoringStatus status = new RefactoringStatus();
 		monitor.beginTask("Checking preconditions...", 2);
 		try {
-			refactor();
+			refactor(monitor);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-		}
-		finally {
+		} finally {
 			monitor.done();
 		}
 		return status;
-		
+
 	}
 
 	@Override
 	public RefactoringStatus checkInitialConditions(IProgressMonitor monitor)
 			throws CoreException, OperationCanceledException {
-		
-//		if (!(smell instanceof DependencyCreationSmell)) //Não podemos continuar
-//			return null;
-		
-		RefactoringStatus status= new RefactoringStatus();
+
+		// if (!(smell instanceof DependencyCreationSmell)) //Não podemos
+		// continuar
+		// return null;
+
+		RefactoringStatus status = new RefactoringStatus();
 		try {
 			monitor.beginTask("Checking preconditions...", 1);
-			//Check the name
-		
+			// Check the name
+
 		} finally {
 			monitor.done();
 		}
@@ -107,24 +131,30 @@ public class DependencyCreationRefactoring extends Refactoring {
 	}
 
 	@Override
-	public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
+	public Change createChange(IProgressMonitor monitor) throws CoreException,
+			OperationCanceledException {
 		try {
 			monitor.beginTask("Creating change...", 1);
-			final Collection<TextFileChange> localChanges= changes.values();
-			CompositeChange change= new CompositeChange(getName(), localChanges.toArray(new Change[localChanges.size()])) {
+			final Collection<TextFileChange> localChanges = changes.values();
+			CompositeChange change = new CompositeChange(getName(),
+					localChanges.toArray(new Change[localChanges.size()])) {
 
 				@Override
 				public ChangeDescriptor getDescriptor() {
-					return new RefactoringChangeDescriptor(new RefactoringDescriptor("Id", "Project", "Desc", "comp", 0) {
-						
-						@Override
-						public Refactoring createRefactoring(RefactoringStatus arg0)
-								throws CoreException {
-							DependencyCreationRefactoring ref = new DependencyCreationRefactoring(smell);
-							
-							return ref;
-						}
-					});
+					return new RefactoringChangeDescriptor(
+							new RefactoringDescriptor("Id", "Project", "Desc",
+									"comp", 0) {
+
+								@Override
+								public Refactoring createRefactoring(
+										RefactoringStatus arg0)
+										throws CoreException {
+									DependencyCreationRefactoring ref = new DependencyCreationRefactoring(
+											smell);
+
+									return ref;
+								}
+							});
 				}
 			};
 			return change;
@@ -138,97 +168,170 @@ public class DependencyCreationRefactoring extends Refactoring {
 		// TODO Auto-generated method stub
 		return "DependencyCreationRefactoring";
 	}
-	
-	private void refactor() {
-		
-		
-		if (newFactory)
-		{
-			ICompilationUnit factory = createFactory(smell.getClassDependencyName(), smell.getClassDependencyNamespace());
-			changes.put(factory, null);
-		}
-		
-		
-		ASTNode node = smell.getNodeWithSmell();
-		ImportRewrite importRewrite= ImportRewrite.create(smell.getCompilationUnit(), true);
-		//Get method declation where the smell is
-		//MethodDeclaration method = helper.GetMethodDeclarationParent(node);
 
-		if (updateAllReferences)
-			System.out.println("Update all references not implmented");
-		
-		
+	private void refactor(IProgressMonitor monitor) {
+
+		if (!newFactory) {
+			IJavaElement el = smell.getICompilationUnit().getAncestor(
+					IJavaElement.PACKAGE_FRAGMENT_ROOT);
+
 	
+			
+		ICompilationUnit factory = createFactory(
+						smell.getClassDependencyName(),
+						smell.getClassDependencyNamespace(), ((IPackageFragmentRoot) el));
+
+
+		}
+
+		ASTNode node = smell.getNodeWithSmell();
 		
+		ImportRewrite importRewrite = ImportRewrite.create(
+				smell.getCompilationUnit(), true);
+		
+		importRewrite.addImport("factories." + smell.getClassDependencyName() + "Factory");
+		
+		// Get method declation where the smell is
+		// MethodDeclaration method = helper.GetMethodDeclarationParent(node);
 		MethodDeclaration method = helper.GetMethodDeclarationParent(node);
+		final Set<SearchMatch> invocations = new HashSet<SearchMatch>();
+		if (updateAllReferences) {
+			updateReferences(monitor, method, invocations);
+
+		}
+
+		
+	    
+	    
+	    
 		MethodDeclaration newMethod = changeMethodDeclaration(method);
 		rewrite.replace(method, newMethod, null);
 
-		DependencyCreationVisitor visitor =new DependencyCreationVisitor(smell.getClassDependencyName(), rewrite, helper);
+		DependencyCreationVisitor visitor = new DependencyCreationVisitor(
+				smell.getClassDependencyName(), rewrite, helper);
 
 		newMethod.accept(visitor);
-		
+
 		VariableDeclarationFragment newVarDecFrag = changeVariableDeclarationFragment(node);
-		rewrite.replace(helper.GetVariableDeclariationFragmentParent(node), newVarDecFrag, null);
-		
-	
-		//rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
-		
+		rewrite.replace(helper.GetVariableDeclariationFragmentParent(node),
+				newVarDecFrag, null);
+
+		// rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
+
 		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
-		
+
 	}
-	
-	private ICompilationUnit createFactory(String objName, Name importName) {
+
+	private void updateReferences(IProgressMonitor monitor,
+			MethodDeclaration method, final Set<SearchMatch> invocations) {
+		IMethodBinding mbind = method.resolveBinding();
+
+		IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
+		SearchPattern pattern = SearchPattern.createPattern(
+				mbind.getJavaElement(), IJavaSearchConstants.REFERENCES,
+				SearchPattern.R_EXACT_MATCH);
+		SearchEngine engine = new SearchEngine();
+		try {
+			engine.search(pattern, new SearchParticipant[] { SearchEngine
+					.getDefaultSearchParticipant() }, scope,
+					new SearchRequestor() {
+
+						@Override
+						public void acceptSearchMatch(SearchMatch match)
+								throws CoreException {
+							if (match.getAccuracy() == SearchMatch.A_ACCURATE
+									&& !match.isInsideDocComment())
+								invocations.add(match);
+						}
+					}, new SubProgressMonitor(monitor, 1,
+							SubProgressMonitor.SUPPRESS_SUBTASK_LABEL));
+		} catch (CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+			for (SearchMatch match : invocations) {
+				Object element = match.getElement();
+				if (element instanceof IMember) {
+					
+					ICompilationUnit unit = ((IMember) element).getCompilationUnit();
+					CompilationUnit cUnit = parse(unit);
+					ASTRewrite astRw = ASTRewrite.create(cUnit.getAST());
+					RefactorHelper refHelper = new RefactorHelper(cUnit.getAST());
+							MethodCallerAddParameterVisitor visitor = new MethodCallerAddParameterVisitor(
+									method.getName().toString(), smell.getClassDependencyName() + "Factory", astRw, refHelper);
+							ImportRewrite ir = ImportRewrite.create(
+									cUnit, true);
+					cUnit.accept(visitor);
+					rewriteAST(unit, astRw, ir);
+				}
+			}
+	}
+
+	private ICompilationUnit createFactory(String objName, Name importName,
+			IPackageFragmentRoot project) {
 		FactoryCreator fact = new FactoryCreator();
 		try {
-			return fact.CreateFactory("factories", objName + "Factory", objName, importName);
+			return fact.CreateFactory("factories", objName + "Factory",
+					objName, importName, project);
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private MethodDeclaration changeMethodDeclaration(MethodDeclaration method)
-	{
-		MethodDeclaration newMethodDeclaration = helper.CreateMethodDeclaration(method);
-		newMethodDeclaration.parameters().add(helper.CreateSingleVariableDeclaration(factoryVarName + factoryTypeName, factoryTypeName));
+	private MethodDeclaration changeMethodDeclaration(MethodDeclaration method) {
+		MethodDeclaration newMethodDeclaration = helper
+				.CreateMethodDeclaration(method);
+		newMethodDeclaration.parameters().add(
+				helper.CreateSingleVariableDeclaration(factoryVarName
+						+ factoryTypeName, factoryTypeName + "Factory"));
 		return newMethodDeclaration;
-		
+
 	}
-	
-	private VariableDeclarationFragment changeVariableDeclarationFragment(ASTNode node) 
-	{
-		VariableDeclarationFragment oldVarDecFrag = helper.GetVariableDeclariationFragmentParent(node);
-		VariableDeclarationFragment newVarDecFrag = helper.CreateVariableDeclarationFragment(oldVarDecFrag);
-		MethodInvocation methodInv = helper.CreateMethodInvocation(factoryVarName + factoryTypeName, "CreateInstance");
+
+	private VariableDeclarationFragment changeVariableDeclarationFragment(
+			ASTNode node) {
+		VariableDeclarationFragment oldVarDecFrag = helper
+				.GetVariableDeclariationFragmentParent(node);
+		VariableDeclarationFragment newVarDecFrag = helper
+				.CreateVariableDeclarationFragment(oldVarDecFrag);
+		MethodInvocation methodInv = helper.CreateMethodInvocation(
+				factoryVarName + factoryTypeName, "CreateInstance");
 		newVarDecFrag.setInitializer(methodInv);
 		return newVarDecFrag;
 	}
-	
-	private void rewriteAST(ICompilationUnit unit, ASTRewrite astRewrite, ImportRewrite importRewrite) {
+
+	private void rewriteAST(ICompilationUnit unit, ASTRewrite astRewrite,
+			ImportRewrite importRewrite) {
 		try {
-			MultiTextEdit edit= new MultiTextEdit();
-			TextEdit astEdit= astRewrite.rewriteAST();
+			MultiTextEdit edit = new MultiTextEdit();
+			TextEdit astEdit = astRewrite.rewriteAST();
 
 			if (!isEmptyEdit(astEdit))
 				edit.addChild(astEdit);
-			TextEdit importEdit= importRewrite.rewriteImports(new NullProgressMonitor());
+			TextEdit importEdit = importRewrite
+					.rewriteImports(new NullProgressMonitor());
 			if (!isEmptyEdit(importEdit))
 				edit.addChild(importEdit);
 			if (isEmptyEdit(edit))
 				return;
 
-			TextFileChange change= changes.get(unit);
+			TextFileChange change = changes.get(unit);
+			// if (change instanceof TextFileChange || change == null) {
+			// TextFileChange tch;
 			if (change == null) {
-				change= new TextFileChange(unit.getElementName(), (IFile) unit.getResource());
+				change = new TextFileChange(unit.getElementName(),
+						(IFile) unit.getResource());
 				change.setTextType("java");
 				change.setEdit(edit);
 			} else
-				change.getEdit().addChild(edit);
+				((TextFileChange) change).getEdit().addChild(edit);
 
 			changes.put(unit, change);
+
 		} catch (MalformedTreeException exception) {
 			System.out.println(exception.getMessage());
 		} catch (IllegalArgumentException exception) {
@@ -237,24 +340,34 @@ public class DependencyCreationRefactoring extends Refactoring {
 			System.out.println(exception.getMessage());
 		}
 	}
-	
+
 	private boolean isEmptyEdit(TextEdit edit) {
 		return edit.getClass() == MultiTextEdit.class && !edit.hasChildren();
 	}
-	
+
 	private List<String> getProjectObjects() {
 		ActiveEditor editor = new ActiveEditor();
-			List<ICompilationUnit> cus = editor.getCompilationUnitsFromProject();
-	
+		List<ICompilationUnit> cus = editor.getCompilationUnitsFromProject();
+
 		ArrayList<String> projectClasses = new ArrayList<String>();
 		for (ICompilationUnit cu : cus) {
 			String element = cu.getElementName();
-			
-			
+
 			projectClasses.add(element.substring(0, element.indexOf('.')));
-		}	
-		
+		}
+
 		return projectClasses;
+
+	}
+	
+private CompilationUnit parse(ICompilationUnit unit) {
+		
+		
+		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setSource(unit);
+		parser.setResolveBindings(true);
+		return ((CompilationUnit) parser.createAST(null));
 		
 		
 	}

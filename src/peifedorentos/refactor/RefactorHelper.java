@@ -4,6 +4,8 @@ import java.beans.Expression;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -59,6 +61,29 @@ public class RefactorHelper {
 		
 	}
 	
+	public MethodInvocation CopyMethodInvocation(MethodInvocation node, String varName) {
+		MethodInvocation newMethod = ast.newMethodInvocation();
+		
+		//newMethod.setExpression(node.getExpression());
+		newMethod.arguments().addAll(node.arguments());
+		newMethod.arguments().add(ast.newSimpleName(varName));
+		newMethod.setFlags(node.getFlags());
+		newMethod.setName(node.getName());
+		return newMethod;
+	}
+	
+	public ClassInstanceCreation CopyClassInstanceCreation(ClassInstanceCreation node, String varName) {
+		ClassInstanceCreation newClass = ast.newClassInstanceCreation();
+		//newClass.copySubtree(ast, node);
+		newClass.setExpression(node.getExpression());
+		newClass.setFlags(node.getFlags());
+		newClass.arguments().addAll(node.arguments());
+		newClass.arguments().add(ast.newSimpleName(varName));
+		newClass.setType(CreateType(node.getType().toString()));
+	    newClass.typeArguments().addAll(node.typeArguments());
+		return newClass;
+	}
+	
 	public Name CreateName(String name) {
 		Name simpleName = ast.newName(name);
 		return simpleName;
@@ -102,6 +127,24 @@ public class RefactorHelper {
 			VariableDeclarationFragment oldVarDecFrag) {
 		return (VariableDeclarationFragment) ASTNode.copySubtree(ast, oldVarDecFrag);
 		
+	}
+	
+	public Block GetBlock(ASTNode node) {
+		
+		if (node instanceof Block)
+		{
+			return (Block)node;
+		}
+		else
+		{
+			if (node.getParent() == null) {
+				return null;
+			}
+			else
+			{
+				return GetBlock(node);
+			}
+		}
 	}
 	
 	

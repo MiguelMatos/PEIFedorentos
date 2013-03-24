@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
@@ -43,7 +44,7 @@ public class FactoryCreator {
 
 	@SuppressWarnings("unchecked")
 	public ICompilationUnit CreateFactory(String packageName, String className,
-			String typeName, Name importName) throws JavaModelException {
+			String typeName, Name importName, IPackageFragmentRoot project) throws JavaModelException {
 		ast = AST.newAST(AST.JLS3);
 		unit = ast.newCompilationUnit();
 
@@ -103,22 +104,29 @@ public class FactoryCreator {
 		TextEdit te = cf.format(CodeFormatter.K_UNKNOWN, code, 0,
 				code.length(), 0, null);
 		
-		ActiveEditor ae = new ActiveEditor();
-		IJavaProject proj = (IJavaProject) ae.getProject();
-		IPackageFragmentRoot[] frags = proj.getAllPackageFragmentRoots();
-		
-		IPackageFragmentRoot root = null;
-		for(IPackageFragmentRoot frag : frags) {
-			if (frag.getKind() == IPackageFragmentRoot.K_SOURCE) {
-				root = frag;
-				break;
-			}
+		Document doc = new Document(code);
+		try {
+			te.apply(doc);
+		} catch (MalformedTreeException | BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+//		ActiveEditor ae = new ActiveEditor();
+//		IJavaProject proj = (IJavaProject) ae.getProject();
+//		IPackageFragmentRoot[] frags = proj.getAllPackageFragmentRoots();
+//		
+//		IPackageFragmentRoot root = null;
+//		for(IPackageFragmentRoot frag : frags) {
+//			if (frag.getKind() == IPackageFragmentRoot.K_SOURCE) {
+//				root = frag;
+//				break;
+//			}
+//		}
+//		
 		
+//		IPackageFragment packFrag = root.createPackageFragment(packageName, true, null);
 		
-		IPackageFragment packFrag = root.createPackageFragment(packageName, true, null);
-		
-		ICompilationUnit cu = packFrag.createCompilationUnit(className + ".java", code, false, null);
+		ICompilationUnit cu = project.createPackageFragment("factories", true, null).createCompilationUnit(className + ".java", doc.get(), false, null);
 		// body.statements().add(body);
 
 		//saveFile(className + ".java");
