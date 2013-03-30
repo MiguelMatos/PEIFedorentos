@@ -15,9 +15,11 @@ import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeParameter;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 public class RefactorHelper {
 
@@ -37,6 +39,18 @@ public class RefactorHelper {
 		var.setType(CreateType(parameterType));
 		
 		return var;
+	}
+	
+	public Statement GetParentStatement(ASTNode node) {
+		
+		
+		
+		if (node instanceof Statement)
+			return (Statement) node;
+		else if (node.getParent() != null)
+			return GetParentStatement(node.getParent());
+		else
+			return null;
 	}
 	
 	public Type CreateType(Type qualifier, String typeName) {
@@ -100,6 +114,31 @@ public class RefactorHelper {
 		return null;
 	}
 	
+	public ClassInstanceCreation CreateInstanceCreation(String typename) {
+		
+		ClassInstanceCreation instance = ast.newClassInstanceCreation();
+		instance.setType(ast.newSimpleType(ast.newSimpleName(typename)));
+		
+		return instance;
+		
+	}
+	
+	public VariableDeclarationFragment CreateVariableDeclarationFragment(String varName) {
+		
+		VariableDeclarationFragment var = ast.newVariableDeclarationFragment();
+		var.setName(ast.newSimpleName(varName));
+		return var;
+		
+	}
+	
+	public VariableDeclarationStatement CreateVariableDeclarationStatement(VariableDeclarationFragment fragment, Type type) {
+		VariableDeclarationStatement var = ast.newVariableDeclarationStatement(fragment);
+		var.setType(type);
+		return var;
+	}
+	
+	
+	
 	public VariableDeclarationFragment GetVariableDeclariationFragmentParent(ASTNode node) 
 	{
 		if (node.getParent() != null) {
@@ -145,6 +184,15 @@ public class RefactorHelper {
 				return GetBlock(node);
 			}
 		}
+	}
+
+
+
+
+	public Block CreateNewBlock(Block oldBlock) {
+				
+				Block b = (Block) ASTNode.copySubtree(ast, oldBlock);
+				return b;
 	}
 	
 	

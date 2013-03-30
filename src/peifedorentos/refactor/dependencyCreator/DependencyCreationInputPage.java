@@ -16,97 +16,48 @@ import org.eclipse.swt.widgets.Text;
 
 public class DependencyCreationInputPage extends UserInputWizardPage {
 
-	Combo factoriesAvailable;
-	Text newFactoryName;
+	private Text textNameFactory;
+	private Combo comboFactories;
+	private Button chkUpdateAllReferences;
+	private Button chkCreateFactory;
+	
 	
 	public DependencyCreationInputPage(String name) {
 		super(name);
 		// TODO Auto-generated constructor stub
 	}
 
+
+	
 	@Override
 	public void createControl(Composite parent) {
 		Composite result= new Composite(parent, SWT.NONE);
 
 		setControl(result);
 
-		GridLayout layout= new GridLayout();
-		layout.numColumns= 2;
-		result.setLayout(layout);
-
-		Label label= new Label(result, SWT.NONE);
-		label.setText("&Factory name:");
+		Label lblNewFactoryName = new Label(parent, SWT.NONE);
+		lblNewFactoryName.setBounds(10, 22, 115, 15);
+		lblNewFactoryName.setText("New Factory Name:");
 		
-		newFactoryName = createNameField(result);
+		Label lblExistingFactory = new Label(parent, SWT.NONE);
+		lblExistingFactory.setBounds(10, 58, 115, 15);
+		lblExistingFactory.setText("Existing Factory:");
 		
-		label= new Label(result, SWT.NONE);
-		label.setText("&Declaring class:");
-
-		Composite composite= new Composite(result, SWT.NONE);
-		layout= new GridLayout();
-		layout.marginHeight= 0;
-		layout.marginWidth= 0;
-		layout.numColumns= 2;
-		composite.setLayout(layout);
-		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		factoriesAvailable= createTypeCombo(composite);
-		factoriesAvailable.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		textNameFactory = new Text(parent, SWT.BORDER);
+		textNameFactory.setBounds(131, 22, 273, 21);
 		
-		GridData data= new GridData();
-		data.horizontalAlignment= GridData.END;
-		final Button createNewFactory= new Button(result, SWT.CHECK);
-		createNewFactory.setText("&Create new Factory");
-		data= new GridData(GridData.FILL_HORIZONTAL);
-		data.horizontalSpan= 2;
-		data.verticalIndent= 2;
-		createNewFactory.setLayoutData(data);
+		comboFactories = new Combo(parent, SWT.NONE);
+		comboFactories.setBounds(131, 58, 273, 23);
 		
+		chkUpdateAllReferences = new Button(parent, SWT.CHECK);
+		chkUpdateAllReferences.setBounds(131, 99, 178, 16);
+		chkUpdateAllReferences.setText("Update all references");
 		
-		createNewFactory.addSelectionListener(new SelectionAdapter() {
-
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				//Selection changed in create new factory check box
-			}
-		});
-		
-		newFactoryName.addModifyListener(new ModifyListener() {
-
-			public void modifyText(ModifyEvent event) {
-				inputChanged();
-			}
-		});
-		
-		
-		factoriesAvailable.addModifyListener(new ModifyListener() {
-
-			public void modifyText(ModifyEvent event) {
-				inputChanged();
-			}
-		});
-	}
-	
-	public void inputChanged() {
-		
+		chkCreateFactory = new Button(parent, SWT.CHECK);
+		chkCreateFactory.setBounds(131, 125, 93, 16);
+		chkCreateFactory.setText("Create factory");
 	}
 	
 	
-	private Text createNameField(Composite result) {
-		Text field= new Text(result, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-		field.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		return field;
-	}
-
-	private Combo createTypeCombo(Composite composite) {
-		Combo combo= new Combo(composite, SWT.SINGLE | SWT.BORDER);
-		combo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		combo.setVisibleItemCount(4);
-		return combo;
-	}
-	
-	private String[] getComboItems() {
-		return null;
-	}
 
 }

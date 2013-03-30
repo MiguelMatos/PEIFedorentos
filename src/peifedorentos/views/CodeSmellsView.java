@@ -13,10 +13,8 @@ import org.eclipse.swt.SWT;
 
 import peifedorentos.refactor.Refactorer;
 import peifedorentos.refactor.dependencyCreator.DependencyCreationRefactoring;
-import peifedorentos.refactor.dependencyCreator.RefactorerDependencyCreation;
 import peifedorentos.refactor.structures.FactoryCreator;
 import peifedorentos.refactor.ui.RefactorDataWizzard;
-import peifedorentos.refactor.ui.RefactorPreview;
 import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
 /**

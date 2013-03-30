@@ -3,7 +3,6 @@ package peifedorentos.refactor.ui;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 
-import peifedorentos.refactor.dependencyCreator.RefactorerDependencyCreation;
 
 
 
