@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
 
 import peifedorentos.refactor.Refactorer;
+import peifedorentos.refactor.dependencyCreator.DependencyCreationDataWizard;
 import peifedorentos.refactor.dependencyCreator.DependencyCreationRefactoring;
 import peifedorentos.refactor.structures.FactoryCreator;
 import peifedorentos.refactor.ui.RefactorDataWizzard;
@@ -167,7 +168,7 @@ public class CodeSmellsView extends ViewPart {
 					
 					DependencyCreationRefactoring ref = new DependencyCreationRefactoring(smell);
 					//RefactorPreview ref = new RefactorPreview(smell);
-					RefactorDataWizzard wizard = new RefactorDataWizzard(ref, "PeiFedorentos");
+					DependencyCreationDataWizard wizard = new DependencyCreationDataWizard(ref, "PeiFedorentos");
 					RefactoringWizardOpenOperation operation= new RefactoringWizardOpenOperation(wizard);
 					try {
 						operation.run(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Refactor");

@@ -1,9 +1,7 @@
 package peifedorentos.refactor.dependencyCreator;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +20,7 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -62,14 +61,12 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
+import peifedorentos.interfaces.Factory;
 import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.refactor.structures.FactoryCreator;
-import peifedorentos.smelldetectors.ClassInformation;
 import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
-import peifedorentos.smells.SmellTypes;
 import peifedorentos.util.ActiveEditor;
-import peifedorentos.visitors.ClassInstanceCreationVisitor;
 
 public class DependencyCreationRefactoring extends Refactoring {
 
@@ -78,7 +75,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 
 	private String factoryTypeName = "Roda";
 	private final String factoryVarName = "factory";
-	private boolean updateAllReferences = true;
+	private boolean updateAllReferences = false;
 	private boolean newFactory = false;
 
 	private ASTRewrite rewrite;
@@ -171,7 +168,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 
 	private void refactor(IProgressMonitor monitor) {
 
-		if (!newFactory) {
+		if (!isNewFactory()) {
 			IJavaElement el = smell.getICompilationUnit().getAncestor(
 					IJavaElement.PACKAGE_FRAGMENT_ROOT);
 
@@ -179,7 +176,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 			
 		ICompilationUnit factory = createFactory(
 						smell.getClassDependencyName(),
-						smell.getClassDependencyNamespace(), ((IPackageFragmentRoot) el));
+						smell.getClassDependencyNamespace(), factoryTypeName, ((IPackageFragmentRoot) el));
 
 
 		}
@@ -195,7 +192,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 		// MethodDeclaration method = helper.GetMethodDeclarationParent(node);
 		MethodDeclaration method = helper.GetMethodDeclarationParent(node);
 		final Set<SearchMatch> invocations = new HashSet<SearchMatch>();
-		if (updateAllReferences) {
+		if (isUpdateAllReferences()) {
 			updateReferences(monitor, method, invocations);
 
 		}
@@ -268,11 +265,11 @@ public class DependencyCreationRefactoring extends Refactoring {
 			}
 	}
 
-	private ICompilationUnit createFactory(String objName, Name importName,
+	private ICompilationUnit createFactory(String objName, Name importName, String factoryName,
 			IPackageFragmentRoot project) {
 		FactoryCreator fact = new FactoryCreator();
 		try {
-			return fact.CreateFactory("factories", objName + "Factory",
+			return fact.CreateFactory("factories", factoryName,
 					objName, importName, project);
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
@@ -287,7 +284,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 				.CreateMethodDeclaration(method);
 		newMethodDeclaration.parameters().add(
 				helper.CreateSingleVariableDeclaration(factoryVarName
-						+ factoryTypeName, factoryTypeName + "Factory"));
+						+ getFactoryTypeName(), getFactoryTypeName() + "Factory"));
 		return newMethodDeclaration;
 
 	}
@@ -299,7 +296,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 		VariableDeclarationFragment newVarDecFrag = helper
 				.CreateVariableDeclarationFragment(oldVarDecFrag);
 		MethodInvocation methodInv = helper.CreateMethodInvocation(
-				factoryVarName + factoryTypeName, "CreateInstance");
+				factoryVarName + getFactoryTypeName(), "CreateInstance");
 		newVarDecFrag.setInitializer(methodInv);
 		return newVarDecFrag;
 	}
@@ -370,6 +367,51 @@ private CompilationUnit parse(ICompilationUnit unit) {
 		return ((CompilationUnit) parser.createAST(null));
 		
 		
+	}
+
+	public RefactoringStatus setFactoryName(String name) {
+		setFactoryTypeName(name);
+		RefactoringStatus status = new RefactoringStatus();
+		return status;
+	}
+	
+	public RefactoringStatus changeUpdateRefFlag(boolean flag) {
+		setUpdateAllReferences(flag);
+		RefactoringStatus status = new RefactoringStatus();
+		return status;
+	}
+	
+	public RefactoringStatus isNewFactory(boolean flag) {
+		newFactory = flag;
+		RefactoringStatus status = new RefactoringStatus();
+		return status;
+	}
+
+	public String getFactoryTypeName() {
+		return factoryTypeName;
+	}
+
+	public RefactoringStatus setFactoryTypeName(String factoryTypeName) {
+		this.factoryTypeName = factoryTypeName;
+		return new RefactoringStatus();
+	}
+
+	public boolean isUpdateAllReferences() {
+		return updateAllReferences;
+	}
+
+	public RefactoringStatus setUpdateAllReferences(boolean updateAllReferences) {
+		this.updateAllReferences = updateAllReferences;
+		return new RefactoringStatus();
+	}
+
+	public boolean isNewFactory() {
+		return newFactory;
+	}
+
+	public RefactoringStatus setNewFactory(boolean newFactory) {
+		this.newFactory = newFactory;
+		return new RefactoringStatus();
 	}
 
 }

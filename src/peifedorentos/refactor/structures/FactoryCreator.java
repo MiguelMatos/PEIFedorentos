@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
@@ -73,6 +74,11 @@ public class FactoryCreator {
 		type.modifiers().add(
 				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 		type.setName(ast.newSimpleName(className));
+		
+		MarkerAnnotation annot = ast.newMarkerAnnotation();
+		annot.setTypeName(ast.newSimpleName("Factory"));
+		
+		type.modifiers().add(annot);
 
 		MethodDeclaration method = ast.newMethodDeclaration();
 		method.setConstructor(false);
