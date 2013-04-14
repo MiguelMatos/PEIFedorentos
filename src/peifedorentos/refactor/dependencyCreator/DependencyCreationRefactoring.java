@@ -72,12 +72,12 @@ public class DependencyCreationRefactoring extends Refactoring {
 
 	private Map<ICompilationUnit, TextFileChange> changes = null;
 	private DependencyCreationSmell smell;
+	private DependencyCreationRefactoring instance;
 
-	private String factoryTypeName = "Roda";
+	private String factoryTypeName = "Roda11";
 	private final String factoryVarName = "factory";
 	private boolean updateAllReferences = false;
 	private boolean newFactory = false;
-
 	private ASTRewrite rewrite;
 	private RefactorHelper helper;
 
@@ -88,8 +88,10 @@ public class DependencyCreationRefactoring extends Refactoring {
 				.getAST());
 
 		this.helper = new RefactorHelper(smell.getCompilationUnit().getAST());
-
+		this.instance = this;
 	}
+	
+	
 
 	@Override
 	public RefactoringStatus checkFinalConditions(IProgressMonitor monitor)
@@ -146,8 +148,10 @@ public class DependencyCreationRefactoring extends Refactoring {
 								public Refactoring createRefactoring(
 										RefactoringStatus arg0)
 										throws CoreException {
-									DependencyCreationRefactoring ref = new DependencyCreationRefactoring(
-											smell);
+									DependencyCreationRefactoring ref = null;
+						
+										ref = instance;
+									
 
 									return ref;
 								}
@@ -168,7 +172,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 
 	private void refactor(IProgressMonitor monitor) {
 
-		if (!isNewFactory()) {
+		if (isNewFactory()) {
 			IJavaElement el = smell.getICompilationUnit().getAncestor(
 					IJavaElement.PACKAGE_FRAGMENT_ROOT);
 
@@ -186,7 +190,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 		ImportRewrite importRewrite = ImportRewrite.create(
 				smell.getCompilationUnit(), true);
 		
-		importRewrite.addImport("factories." + smell.getClassDependencyName() + "Factory");
+		importRewrite.addImport("factories." + factoryTypeName);
 		
 		// Get method declation where the smell is
 		// MethodDeclaration method = helper.GetMethodDeclarationParent(node);
@@ -205,7 +209,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 		rewrite.replace(method, newMethod, null);
 
 		DependencyCreationVisitor visitor = new DependencyCreationVisitor(
-				smell.getClassDependencyName(), rewrite, helper);
+				smell.getClassDependencyName(), rewrite, helper, "factory" + factoryTypeName);
 
 		newMethod.accept(visitor);
 
@@ -255,12 +259,18 @@ public class DependencyCreationRefactoring extends Refactoring {
 					CompilationUnit cUnit = parse(unit);
 					ASTRewrite astRw = ASTRewrite.create(cUnit.getAST());
 					RefactorHelper refHelper = new RefactorHelper(cUnit.getAST());
+					
+					
+					ImportRewrite importRewrite = ImportRewrite.create(
+							cUnit, true);
+					
+					importRewrite.addImport("factories." + factoryTypeName);
+					
 							MethodCallerAddParameterVisitor visitor = new MethodCallerAddParameterVisitor(
-									method.getName().toString(), smell.getClassDependencyName() + "Factory", astRw, refHelper);
-							ImportRewrite ir = ImportRewrite.create(
-									cUnit, true);
+									method.getName().toString(), factoryTypeName, astRw, refHelper);
+							
 					cUnit.accept(visitor);
-					rewriteAST(unit, astRw, ir);
+					rewriteAST(unit, astRw, importRewrite);
 				}
 			}
 	}
@@ -284,7 +294,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 				.CreateMethodDeclaration(method);
 		newMethodDeclaration.parameters().add(
 				helper.CreateSingleVariableDeclaration(factoryVarName
-						+ getFactoryTypeName(), getFactoryTypeName() + "Factory"));
+						+ getFactoryTypeName(), getFactoryTypeName()));
 		return newMethodDeclaration;
 
 	}

@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import peifedorentos.interfaces.Factory;
 import peifedorentos.smelldetectors.ClassInformation;
 import peifedorentos.util.ActiveEditor;
 import peifedorentos.visitors.FactoryClassVisitor;
@@ -119,6 +120,7 @@ public class DependencyCreationInputPage extends UserInputWizardPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				refactoring.setNewFactory(chkCreateFactory.getSelection());
+				handleInputChanged();
 				
 			}
 		});
@@ -134,7 +136,7 @@ public class DependencyCreationInputPage extends UserInputWizardPage {
 		RefactoringStatus status= new RefactoringStatus();
 		DependencyCreationRefactoring refactoring= getDepRefactoring();
 		
-		if (refactoring.isNewFactory()) {
+		if (chkCreateFactory.getSelection()) {
 			status.merge(refactoring.setFactoryTypeName(textNameFactory.getText()));
 		}
 		else

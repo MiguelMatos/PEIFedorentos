@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 
 import peifedorentos.refactor.RefactorHelper;
 
@@ -71,6 +72,8 @@ public class MethodCallerAddParameterVisitor extends ASTVisitor {
 			System.out.println("Create instance");
 			firstOccurrence = false;
 		}
+		
+	
 		
 		if (node.getType().toString().equals(methodName)) {
 			

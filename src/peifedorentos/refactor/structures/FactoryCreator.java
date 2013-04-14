@@ -71,14 +71,16 @@ public class FactoryCreator {
 		// Type dec
 		TypeDeclaration type = ast.newTypeDeclaration();
 		type.setInterface(false);
-		type.modifiers().add(
-				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-		type.setName(ast.newSimpleName(className));
 		
 		MarkerAnnotation annot = ast.newMarkerAnnotation();
 		annot.setTypeName(ast.newSimpleName("Factory"));
 		
 		type.modifiers().add(annot);
+		type.modifiers().add(
+				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+		type.setName(ast.newSimpleName(className));
+		
+		
 
 		MethodDeclaration method = ast.newMethodDeclaration();
 		method.setConstructor(false);

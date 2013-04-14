@@ -15,11 +15,12 @@ public class DependencyCreationVisitor extends ASTVisitor {
 	private RefactorHelper helper;
 	private String factoryVarName = "factory";
 	
-	public DependencyCreationVisitor(String objectName, ASTRewrite rw, RefactorHelper helper)
+	public DependencyCreationVisitor(String objectName, ASTRewrite rw, RefactorHelper helper, String factoryVarName)
 	{
 		this.objectName = objectName;
 		this.astRw = rw;
 		this.helper = helper;
+		this.factoryVarName = factoryVarName;
 	
 	}
 	
@@ -38,7 +39,7 @@ public class DependencyCreationVisitor extends ASTVisitor {
 	{
 		VariableDeclarationFragment oldVarDecFrag = helper.GetVariableDeclariationFragmentParent(node);
 		VariableDeclarationFragment newVarDecFrag = helper.CreateVariableDeclarationFragment(oldVarDecFrag);
-		MethodInvocation methodInv = helper.CreateMethodInvocation(factoryVarName + objectName, "CreateInstance");
+		MethodInvocation methodInv = helper.CreateMethodInvocation(factoryVarName, "CreateInstance");
 		newVarDecFrag.setInitializer(methodInv);
 		return newVarDecFrag;
 	}

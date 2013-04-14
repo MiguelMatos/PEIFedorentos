@@ -50,6 +50,10 @@ public class SmellsContentProvider implements IStructuredContentProvider {
 		}
 			
 	}
+	
+	public static void clear() {
+		smells.clear();
+	}
 
 
 

@@ -24,7 +24,7 @@ public class SmellDetectorEngine {
 	
 	public void StartSmellDetection(List<ICompilationUnit> cus) {
 		
-		
+		SmellsContentProvider.clear();
 		
 		List<ClassInformation> compilationUnits = parse(cus);
 		

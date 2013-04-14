@@ -1,5 +1,7 @@
 package peifedorentos.views;
 
+import java.util.ArrayList;
+
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.*;
 import org.eclipse.jface.viewers.*;
@@ -16,8 +18,12 @@ import peifedorentos.refactor.dependencyCreator.DependencyCreationDataWizard;
 import peifedorentos.refactor.dependencyCreator.DependencyCreationRefactoring;
 import peifedorentos.refactor.structures.FactoryCreator;
 import peifedorentos.refactor.ui.RefactorDataWizzard;
+import peifedorentos.smelldetectors.ISmellDetector;
+import peifedorentos.smelldetectors.NewClassSmellDetector;
+import peifedorentos.smelldetectors.SmellDetectorEngine;
 import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
+import peifedorentos.util.ActiveEditor;
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
  * shows data obtained from the model. The sample creates a dummy model on the
@@ -177,8 +183,19 @@ public class CodeSmellsView extends ViewPart {
 						e.printStackTrace();
 					}
 					
+					SmellsContentProvider.clear();
 					
-					showMessage("Factory Created");
+					ISmellDetector d1 = new NewClassSmellDetector();
+					ArrayList<ISmellDetector> detectors = new ArrayList<ISmellDetector>();
+					detectors.add(d1);
+					
+					ActiveEditor editor = new ActiveEditor();
+					
+					
+					SmellDetectorEngine eng = new SmellDetectorEngine(detectors);
+					eng.StartSmellDetection(editor.getCompilationUnitsFromProject());
+					
+					CodeSmellsView.update();
 				}
 			}
 		};

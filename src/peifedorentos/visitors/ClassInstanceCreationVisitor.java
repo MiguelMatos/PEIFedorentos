@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -21,6 +22,7 @@ import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import peifedorentos.smelldetectors.ClassInformation;
 import peifedorentos.smells.DependencyCreationSmell;
@@ -40,6 +42,22 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 		this.projectObjects = projectObjects;
 		this.detectedSmells = new ArrayList<DependencyCreationSmell>();
 		this.imports = new HashMap<String, Name>();
+	}
+	
+	@Override
+	public boolean visit(TypeDeclaration node) {
+		
+		
+		for (Object mod : node.modifiers())
+		{
+			if (mod instanceof MarkerAnnotation)
+			{
+				if (((MarkerAnnotation)mod).getTypeName().toString().equals("Factory"))
+					return false;
+				
+			}
+		}
+		return true;
 	}
 	
 	
