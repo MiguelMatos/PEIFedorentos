@@ -1,5 +1,6 @@
 package peifedorentos.smells;
 
 public enum SmellTypes {
-	InstanceCreation
+	InstanceCreation,
+	StaticMethodCall
 }

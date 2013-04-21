@@ -242,6 +242,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 								throws CoreException {
 							if (match.getAccuracy() == SearchMatch.A_ACCURATE
 									&& !match.isInsideDocComment())
+								
 								invocations.add(match);
 						}
 					}, new SubProgressMonitor(monitor, 1,

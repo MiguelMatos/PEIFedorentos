@@ -10,8 +10,9 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import peifedorentos.smelldetectors.ISmellDetector;
-import peifedorentos.smelldetectors.NewClassSmellDetector;
 import peifedorentos.smelldetectors.SmellDetectorEngine;
+import peifedorentos.smelldetectors.dependencyCreation.NewClassSmellDetector;
+import peifedorentos.smelldetectors.dependencyCreation.StaticMethodCallSmellDetector;
 import peifedorentos.util.ActiveEditor;
 import peifedorentos.util.ClassEnumerator;
 
@@ -23,8 +24,10 @@ public class StartProcessAction implements IWorkbenchWindowActionDelegate {
 
 		
 		ISmellDetector d1 = new NewClassSmellDetector();
+		ISmellDetector d2 = new StaticMethodCallSmellDetector();
 		ArrayList<ISmellDetector> detectors = new ArrayList<ISmellDetector>();
-		detectors.add(d1);
+		//detectors.add(d1);
+		detectors.add(d2);
 		
 		ActiveEditor editor = new ActiveEditor();
 		

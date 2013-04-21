@@ -1,4 +1,4 @@
-package peifedorentos.smelldetectors;
+package peifedorentos.smelldetectors.dependencyCreation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,8 @@ import java.util.List;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import peifedorentos.smelldetectors.ClassInformation;
+import peifedorentos.smelldetectors.ISmellDetector;
 import peifedorentos.smells.ISmell;
 import peifedorentos.util.ActiveEditor;
 import peifedorentos.visitors.ClassInstanceCreationVisitor;
