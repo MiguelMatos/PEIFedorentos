@@ -1,12 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: PeiFedorentos
-Bundle-SymbolicName: PeiFedorentos; singleton:=true
+Bundle-Name: PEIFedorentos
+Bundle-SymbolicName: PEIFedorentos;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: peifedorentos.Activator
 Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui,
  org.eclipse.core.runtime
-Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: org.eclipse.core.resources,
  org.eclipse.jdt.core,
@@ -24,3 +25,4 @@ Import-Package: org.eclipse.core.resources,
  org.eclipse.ltk.ui.refactoring,
  org.eclipse.text.edits,
  org.eclipse.ui.texteditor
+Bundle-ActivationPolicy: lazy
