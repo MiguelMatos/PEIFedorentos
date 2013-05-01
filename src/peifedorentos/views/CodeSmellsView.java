@@ -16,13 +16,17 @@ import org.eclipse.swt.SWT;
 import peifedorentos.refactor.Refactorer;
 import peifedorentos.refactor.dependencyCreator.DependencyCreationDataWizard;
 import peifedorentos.refactor.dependencyCreator.DependencyCreationRefactoring;
+import peifedorentos.refactor.staticCall.StaticCallDataWizard;
+import peifedorentos.refactor.staticCall.StaticCallRefactoring;
 import peifedorentos.refactor.structures.FactoryCreator;
 import peifedorentos.refactor.ui.RefactorDataWizzard;
 import peifedorentos.smelldetectors.ISmellDetector;
 import peifedorentos.smelldetectors.SmellDetectorEngine;
 import peifedorentos.smelldetectors.dependencyCreation.NewClassSmellDetector;
+import peifedorentos.smelldetectors.dependencyCreation.StaticMethodCallSmellDetector;
 import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
+import peifedorentos.smells.StaticCallSmell;
 import peifedorentos.util.ActiveEditor;
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -183,20 +187,39 @@ public class CodeSmellsView extends ViewPart {
 						e.printStackTrace();
 					}
 					
-					SmellsContentProvider.clear();
-					
-					ISmellDetector d1 = new NewClassSmellDetector();
-					ArrayList<ISmellDetector> detectors = new ArrayList<ISmellDetector>();
-					detectors.add(d1);
-					
-					ActiveEditor editor = new ActiveEditor();
-					
-					
-					SmellDetectorEngine eng = new SmellDetectorEngine(detectors);
-					eng.StartSmellDetection(editor.getCompilationUnitsFromProject());
-					
-					CodeSmellsView.update();
+				
 				}
+				else if (smell instanceof StaticCallSmell) {
+					StaticCallRefactoring ref = new StaticCallRefactoring(smell);
+					StaticCallDataWizard wizard = new StaticCallDataWizard(ref, "PeiFedorentos");
+					RefactoringWizardOpenOperation operation = new RefactoringWizardOpenOperation(wizard);
+					try {
+						operation.run(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Refactor");
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+				}
+				
+				
+				
+				SmellsContentProvider.clear();
+				
+				ISmellDetector d1 = new NewClassSmellDetector();
+				ISmellDetector d2 = new StaticMethodCallSmellDetector();
+				ArrayList<ISmellDetector> detectors = new ArrayList<ISmellDetector>();
+				//detectors.add(d1);
+				detectors.add(d2);
+				
+				ActiveEditor editor = new ActiveEditor();
+				
+				
+				SmellDetectorEngine eng = new SmellDetectorEngine(detectors);
+				eng.StartSmellDetection(editor.getCompilationUnitsFromProject());
+				
+				CodeSmellsView.update();
+				
 			}
 		};
 	}

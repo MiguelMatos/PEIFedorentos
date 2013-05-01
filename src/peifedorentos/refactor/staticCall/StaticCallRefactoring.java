@@ -19,8 +19,6 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 
 import peifedorentos.refactor.RefactorHelper;
-import peifedorentos.refactor.dependencyCreator.DependencyCreationRefactoring;
-import peifedorentos.smells.DependencyCreationSmell;
 import peifedorentos.smells.ISmell;
 import peifedorentos.smells.StaticCallSmell;
 
@@ -35,7 +33,7 @@ public class StaticCallRefactoring extends Refactoring {
 		this.smell = (StaticCallSmell) smell;
 		this.changes = new LinkedHashMap<ICompilationUnit, TextFileChange>();
 		this.instance = this;
-		this.helper = new RefactorHelper(smell.getCompilationUnit().getAST());
+		//this.helper = new RefactorHelper(smell.getCompilationUnit().getAST());
 	}
 	
 	@Override

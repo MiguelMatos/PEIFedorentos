@@ -11,9 +11,14 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -23,6 +28,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
 
 import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.refactor.dependencyCreator.MethodCallerAddParameterVisitor;
@@ -31,6 +37,7 @@ import peifedorentos.smelldetectors.ISmellDetector;
 import peifedorentos.smells.ISmell;
 import peifedorentos.smells.SmellTypes;
 import peifedorentos.smells.StaticCallSmell;
+import peifedorentos.util.ASTUtils;
 import peifedorentos.visitors.ClassInstanceCreationVisitor;
 import peifedorentos.visitors.StaticMethodVisitor;
 
@@ -70,6 +77,7 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 					method.getJavaElement(), IJavaSearchConstants.REFERENCES,
 					SearchPattern.R_EXACT_MATCH);
 			SearchEngine engine = new SearchEngine();
+			
 			try {
 				engine.search(pattern, new SearchParticipant[] { SearchEngine
 						.getDefaultSearchParticipant() }, scope,
@@ -96,21 +104,24 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 			
 			Object element = result.getElement();
 			if (element instanceof IMember) {
+				IMember member = (IMember) element;
 				
-				ICompilationUnit unit = ((IMember) element).getCompilationUnit();
+				ASTNode nodeWithSmell = getNodeWithSmell(member);
+				ICompilationUnit unit = member.getCompilationUnit();
 				//CompilationUnit cUnit = parse(unit);
 				//int lineNumber = unit.getLineNumber(node.getStartPosition());
-				
+				if (isSmell(nodeWithSmell)) {
 				StaticCallSmell smell = new StaticCallSmell(SmellTypes.StaticMethodCall,
 						unit.findPrimaryType().getElementName(), 
-						((IMember) element).getElementName(), 
-						((IMember) element).getElementName(), 
+						member.getElementName(), 
+						member.getElementName(), 
 						0, 
 						null, 
 						unit, 
-						null);
+						nodeWithSmell);
 				
 				detectedSmells.add(smell);
+				}
 			}
 			
 			
@@ -118,6 +129,59 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 		
 		this.isWorking = false;
 		
+	}
+
+
+	private ASTNode getNodeWithSmell(IMember member) {
+		// TODO Auto-generated method stub
+		ICompilationUnit unit = member.getCompilationUnit();
+		CompilationUnit cu = ASTUtils.parse(unit);
+		ASTNode node = cu.findDeclaringNode(((ResolvedSourceMethod)member).getKey());
+
+		return node;
+	}
+	
+	private boolean isSmell(ASTNode node) {
+		
+		if (findParentVariableDeclaration(node))
+			return true;
+		
+		if (findParentAssignment(node))
+			return true;
+		
+		return false;
+	}
+	
+	private boolean findParentVariableDeclaration(ASTNode node) {
+		if (node instanceof VariableDeclaration)
+		{
+			return true;
+		}
+		else
+		{
+			if (node.getParent() != null)
+				return findParentVariableDeclaration(node.getParent());
+			else
+				return false;
+			
+			
+		}
+	}
+	
+	private boolean findParentAssignment(ASTNode node) {
+		if (node instanceof Assignment)
+		{
+			return true;
+		}
+		else
+		{
+			if (node.getParent() != null)
+				return findParentVariableDeclaration(node.getParent());
+			else
+				return false;
+			
+			
+		}
 	}
 
 
