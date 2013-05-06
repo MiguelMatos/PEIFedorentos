@@ -195,6 +195,10 @@ public class RefactorHelper {
 				return b;
 	}
 	
+	public SimpleName CreateSimpleName(String identifier) {
+		return ast.newSimpleName(identifier);
+	}
+	
 	
 	
 }
