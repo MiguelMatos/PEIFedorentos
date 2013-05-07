@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
@@ -97,7 +98,7 @@ public class StaticCallRefactoring extends Refactoring {
 			processVariableDeclaration(dec);
 		}
 		
-		addParameterToMethod(node);
+		addParameterToMethod(node, "Teste");
 		updateAllReferences(node);
 		
 		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
@@ -133,10 +134,22 @@ public class StaticCallRefactoring extends Refactoring {
 		rewrite.replace(dec, s, null);
 	}
 
-	private void addParameterToMethod(ASTNode node) {
+	private void addParameterToMethod(ASTNode node, String parameterType) {
 		// TODO Auto-generated method stub
 		String varname = "var" + varCount;
 		
+		MethodDeclaration md = findParentMethodDeclaration(node);
+		MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
+		SingleVariableDeclaration param = helper.CreateSingleVariableDeclaration(varname, parameterType);
+		
+		
+		
+		
+	}
+
+	private MethodDeclaration findParentMethodDeclaration(ASTNode node) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private void updateAllReferences(ASTNode node) {
