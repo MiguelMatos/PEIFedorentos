@@ -1,7 +1,9 @@
 package peifedorentos.refactor.staticCall;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -17,7 +19,9 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -82,6 +86,7 @@ public class StaticCallRefactoring extends Refactoring {
 		//Quinto corrigir todas as chamadas para passarem a chamar o static na chamada
 		VariableDeclaration dec = findParentVariableDeclaration(node);
 		Assignment assig = findParentAssignment(node);
+		Type typeName = null; 
 		
 		if (dec == null) {
 			if (assig == null)
@@ -96,9 +101,10 @@ public class StaticCallRefactoring extends Refactoring {
 		else
 		{
 			processVariableDeclaration(dec);
+			typeName = ((VariableDeclarationStatement)dec.getParent()).getType();
 		}
 		
-		addParameterToMethod(node, "Teste");
+		addParameterToMethod(node, typeName);
 		updateAllReferences(node);
 		
 		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
@@ -134,13 +140,33 @@ public class StaticCallRefactoring extends Refactoring {
 		rewrite.replace(dec, s, null);
 	}
 
-	private void addParameterToMethod(ASTNode node, String parameterType) {
+	private void addParameterToMethod(ASTNode node, Type parameterType) {
 		// TODO Auto-generated method stub
 		String varname = "var" + varCount;
 		
 		MethodDeclaration md = findParentMethodDeclaration(node);
-		MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
+	//	MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
+	
+	//	rewrite.replace(md, copyMd, null);
+		
 		SingleVariableDeclaration param = helper.CreateSingleVariableDeclaration(varname, parameterType);
+		//copyMd.parameters().add(param);
+
+		List params = new ArrayList();
+		
+		
+		
+		if (md.parameters() != null)
+		{
+			params.addAll(md.parameters());
+		}
+		
+		
+		params.add(param);
+		
+		md.parameters().clear();
+		md.parameters().addAll(params);
+
 		
 		
 		

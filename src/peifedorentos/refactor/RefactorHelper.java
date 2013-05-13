@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -41,6 +42,22 @@ public class RefactorHelper {
 		return var;
 	}
 	
+public SingleVariableDeclaration CreateSingleVariableDeclaration(String parameterName, Type parameterType) {
+		
+		SingleVariableDeclaration var = ast.newSingleVariableDeclaration();
+		var.setName((SimpleName) CreateName(parameterName));
+		
+		if (!parameterType.isPrimitiveType()) {
+			var.setType(CreateType(parameterType.toString()));
+		}
+		else
+		{
+			var.setType(ast.newPrimitiveType(((PrimitiveType)parameterType).getPrimitiveTypeCode()));
+		}
+		
+		return var;
+	}
+	
 	public Statement GetParentStatement(ASTNode node) {
 		
 		
@@ -59,7 +76,7 @@ public class RefactorHelper {
 	}
 	
 	public Type CreateType(String typeName) {
-		Type type = ast.newSimpleType(CreateName(typeName));
+		SimpleType type = ast.newSimpleType((SimpleName)CreateName(typeName));
 		return type;
 	}
 	
@@ -99,7 +116,7 @@ public class RefactorHelper {
 	}
 	
 	public Name CreateName(String name) {
-		Name simpleName = ast.newName(name);
+		Name simpleName = ast.newSimpleName(name);
 		return simpleName;
 	}
 	
