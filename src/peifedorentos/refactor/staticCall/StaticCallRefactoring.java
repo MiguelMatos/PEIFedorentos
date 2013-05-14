@@ -88,6 +88,7 @@ public class StaticCallRefactoring extends Refactoring {
 		Assignment assig = findParentAssignment(node);
 		Type typeName = null; 
 		
+		
 		if (dec == null) {
 			if (assig == null)
 			{
@@ -95,16 +96,20 @@ public class StaticCallRefactoring extends Refactoring {
 			}
 			else
 			{
+				typeName = ((VariableDeclarationStatement)dec.getParent()).getType();
+				addParameterToMethod(node, typeName);
 				processAssignment(assig);
 			}
 		}
 		else
 		{
-			processVariableDeclaration(dec);
 			typeName = ((VariableDeclarationStatement)dec.getParent()).getType();
+			processVariableDeclaration(dec);
+			addParameterToMethod(dec, typeName);
+			
 		}
 		
-		addParameterToMethod(node, typeName);
+		
 		updateAllReferences(node);
 		
 		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
@@ -138,6 +143,7 @@ public class StaticCallRefactoring extends Refactoring {
 		SimpleName s = helper.CreateSimpleName("var" + varCount);
 		
 		rewrite.replace(dec, s, null);
+	
 	}
 
 	private void addParameterToMethod(ASTNode node, Type parameterType) {
@@ -145,9 +151,9 @@ public class StaticCallRefactoring extends Refactoring {
 		String varname = "var" + varCount;
 		
 		MethodDeclaration md = findParentMethodDeclaration(node);
-	//	MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
+		MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
 	
-	//	rewrite.replace(md, copyMd, null);
+	
 		
 		SingleVariableDeclaration param = helper.CreateSingleVariableDeclaration(varname, parameterType);
 		//copyMd.parameters().add(param);
@@ -156,26 +162,30 @@ public class StaticCallRefactoring extends Refactoring {
 		
 		
 		
-		if (md.parameters() != null)
+		if (copyMd.parameters() != null)
 		{
-			params.addAll(md.parameters());
+			params.addAll(copyMd.parameters());
 		}
 		
 		
 		params.add(param);
 		
-		md.parameters().clear();
-		md.parameters().addAll(params);
+		copyMd.parameters().clear();
+		copyMd.parameters().addAll(params);
 
-		
-		
+		rewrite.replace(md, copyMd, null);
+		//return copyMd;
 		
 		
 	}
 
 	private MethodDeclaration findParentMethodDeclaration(ASTNode node) {
-		// TODO Auto-generated method stub
-		return null;
+		if (node instanceof MethodDeclaration)
+			return (MethodDeclaration) node;
+		else if (node.getParent() != null)
+			return findParentMethodDeclaration(node.getParent());
+		else
+			return null;
 	}
 
 	private void updateAllReferences(ASTNode node) {
