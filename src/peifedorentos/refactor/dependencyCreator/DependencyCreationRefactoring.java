@@ -191,10 +191,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 
 		}
 
-		
-	    
-	    
-	    
+		 
 		MethodDeclaration newMethod = changeMethodDeclaration(method);
 		rewrite.replace(method, newMethod, null);
 
