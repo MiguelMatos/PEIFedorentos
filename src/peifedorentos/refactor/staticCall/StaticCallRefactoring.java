@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
@@ -35,6 +36,7 @@ import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.TextEditGroup;
 
 import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.smells.ISmell;
@@ -89,6 +91,7 @@ public class StaticCallRefactoring extends Refactoring {
 		Type typeName = null; 
 		
 		
+		
 		if (dec == null) {
 			if (assig == null)
 			{
@@ -104,9 +107,8 @@ public class StaticCallRefactoring extends Refactoring {
 		else
 		{
 			typeName = ((VariableDeclarationStatement)dec.getParent()).getType();
-			processVariableDeclaration(dec);
+			//processVariableDeclaration(dec);
 			addParameterToMethod(dec, typeName);
-			
 		}
 		
 		
@@ -138,11 +140,19 @@ public class StaticCallRefactoring extends Refactoring {
 
 	private void processVariableDeclaration(VariableDeclaration node) {
 		// int i = static;
-		MethodInvocation dec = findMethodInvocation(node.getInitializer());
-		varCount++;
-		SimpleName s = helper.CreateSimpleName("var" + varCount);
+		VariableDeclarationFragment oldVarDecFrag = helper
+				.GetVariableDeclariationFragmentParent(node.getInitializer());
+		VariableDeclarationFragment newVarDecFrag = helper
+				.CreateVariableDeclarationFragment(oldVarDecFrag);
 		
-		rewrite.replace(dec, s, null);
+		SimpleName s = helper.CreateSimpleName("var" + varCount);
+		newVarDecFrag.setInitializer(s);
+		
+	
+		varCount++;
+		
+		
+		rewrite.replace(helper.GetVariableDeclariationFragmentParent(node.getInitializer()), newVarDecFrag, null);
 	
 	}
 
@@ -151,33 +161,44 @@ public class StaticCallRefactoring extends Refactoring {
 		String varname = "var" + varCount;
 		
 		MethodDeclaration md = findParentMethodDeclaration(node);
+		
 		MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
+		
+		//SingleVariableDeclaration param = ;
+		copyMd.parameters().add(helper.CreateSingleVariableDeclaration(varname, parameterType));
+		
+		rewrite.replace(md, copyMd,null);
+		//MethodDeclaration copyMd = helper.CreateMethodDeclaration(md);
+	
+//		
+//	
+//		
+//		
+//
+//		List params = new ArrayList();
+//		
+//		
+//		
+//		if (copyMd.parameters() != null)
+//		{
+//			params.addAll(copyMd.parameters());
+//		}
+//		
+//		
+//		params.add(param);
+//		
+//		copyMd.parameters().clear();
+//		copyMd.parameters().addAll(params);
+//		copyMd.setBody(helper.CreateNewBlock(md.getBody()));	
 	
 	
+		processVariableDeclaration((VariableDeclaration) node);
 		
-		SingleVariableDeclaration param = helper.CreateSingleVariableDeclaration(varname, parameterType);
-		//copyMd.parameters().add(param);
-
-		List params = new ArrayList();
-		
-		
-		
-		if (copyMd.parameters() != null)
-		{
-			params.addAll(copyMd.parameters());
-		}
-		
-		
-		params.add(param);
-		
-		copyMd.parameters().clear();
-		copyMd.parameters().addAll(params);
-
-		rewrite.replace(md, copyMd, null);
 		//return copyMd;
 		
 		
 	}
+
 
 	private MethodDeclaration findParentMethodDeclaration(ASTNode node) {
 		if (node instanceof MethodDeclaration)
