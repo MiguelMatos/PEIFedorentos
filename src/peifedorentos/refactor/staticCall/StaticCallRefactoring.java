@@ -51,6 +51,9 @@ public class StaticCallRefactoring extends Refactoring {
 	private static int varCount = 1;
 	private ASTRewrite rewrite;
 	
+	private boolean multipleCalls = false;
+	
+	
 	public StaticCallRefactoring(ISmell smell) {
 		this.smell = (StaticCallSmell) smell;
 		this.changes = new LinkedHashMap<ICompilationUnit, TextFileChange>();
@@ -338,6 +341,14 @@ public class StaticCallRefactoring extends Refactoring {
 	
 	private boolean isEmptyEdit(TextEdit edit) {
 		return edit.getClass() == MultiTextEdit.class && !edit.hasChildren();
+	}
+
+	private boolean isMultipleCalls() {
+		return multipleCalls;
+	}
+
+	private void setMultipleCalls(boolean multipleCalls) {
+		this.multipleCalls = multipleCalls;
 	}
 
 
