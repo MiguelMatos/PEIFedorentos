@@ -55,14 +55,9 @@ public class DependencyCreationInputPage extends UserInputWizardPage {
 			cu.accept(f);
 			
 		}
-		
-		
-		
-		
+			
 	}
 
-
-	
 	@Override
 	public void createControl(Composite composite) {
 		Composite result= new Composite(composite, SWT.NONE);
@@ -111,7 +106,7 @@ public class DependencyCreationInputPage extends UserInputWizardPage {
 				refactoring.setUpdateAllReferences(chkUpdateAllReferences.getSelection());
 			}
 		});
-		chkUpdateAllReferences.setBounds(131, 99, 178, 16);
+		chkUpdateAllReferences.setBounds(131, 99, 200, 16);
 		chkUpdateAllReferences.setText("Update all references");
 		
 		
@@ -124,7 +119,7 @@ public class DependencyCreationInputPage extends UserInputWizardPage {
 				
 			}
 		});
-		chkCreateFactory.setBounds(131, 125, 93, 16);
+		chkCreateFactory.setBounds(131, 125, 200, 16);
 		chkCreateFactory.setText("Create factory");
 	}
 	

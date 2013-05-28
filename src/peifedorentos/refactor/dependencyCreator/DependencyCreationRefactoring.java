@@ -283,6 +283,9 @@ public class DependencyCreationRefactoring extends Refactoring {
 		newMethodDeclaration.parameters().add(
 				helper.CreateSingleVariableDeclaration(factoryVarName
 						+ getFactoryTypeName(), getFactoryTypeName()));
+		
+	
+		//newMethodDeclaration.parameters().addAll((ASTNode.copySubtrees(this.rewrite.getAST(), method.parameters())));
 		return newMethodDeclaration;
 
 	}

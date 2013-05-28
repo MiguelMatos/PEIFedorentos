@@ -209,7 +209,7 @@ public class CodeSmellsView extends ViewPart {
 				ISmellDetector d1 = new NewClassSmellDetector();
 				ISmellDetector d2 = new StaticMethodCallSmellDetector();
 				ArrayList<ISmellDetector> detectors = new ArrayList<ISmellDetector>();
-				//detectors.add(d1);
+				detectors.add(d1);
 				detectors.add(d2);
 				
 				ActiveEditor editor = new ActiveEditor();
