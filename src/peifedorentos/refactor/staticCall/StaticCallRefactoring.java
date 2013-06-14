@@ -78,47 +78,15 @@ public class StaticCallRefactoring extends Refactoring {
 		return status;
 	}
 	private void refactor(IProgressMonitor monitor) {
+		
+		
 		// TODO Auto-generated method stub
 		ASTNode node = smell.getNodeWithSmell();
 		
 		ImportRewrite importRewrite = ImportRewrite.create(
 				smell.getCompilationUnit(), true);
 		
-		//Primeiro encontrar o pai seja ele i = static ou int i = static
-		//Segundo ver o o tipo de i
-		//Terceiro adicionar um parametro ao método do tipo i
-		//Quarto substituir a chamada ao static pelo parametro
-		//Quinto corrigir todas as chamadas para passarem a chamar o static na chamada
-		VariableDeclaration dec = findParentVariableDeclaration(node);
-		Assignment assig = findParentAssignment(node);
-		Type typeName = null; 
 		
-		
-		
-		if (dec == null) {
-			if (assig == null)
-			{
-				return;
-			}
-			else
-			{
-				typeName = ((VariableDeclarationStatement)dec.getParent()).getType();
-				addParameterToMethod(node, typeName);
-				processAssignment(assig);
-			}
-		}
-		else
-		{
-			typeName = ((VariableDeclarationStatement)dec.getParent()).getType();
-			//processVariableDeclaration(dec);
-			addParameterToMethod(dec, typeName);
-		}
-		
-		
-		updateAllReferences(node);
-		
-		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
-
 		
 	}
 
