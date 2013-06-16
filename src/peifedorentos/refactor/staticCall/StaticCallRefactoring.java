@@ -80,6 +80,7 @@ public class StaticCallRefactoring extends Refactoring {
 	private void refactor(IProgressMonitor monitor) {
 		
 		
+		
 		// TODO Auto-generated method stub
 		ASTNode node = smell.getNodeWithSmell();
 		
