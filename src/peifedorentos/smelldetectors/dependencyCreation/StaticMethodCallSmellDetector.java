@@ -58,7 +58,27 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 	private boolean isWorking = false;
 	private List<ISmell> detectedSmells = new ArrayList<ISmell>();
 	private List<ClassInformation> units;
-	private List<IMethodBinding> staticMethods = new ArrayList<IMethodBinding>();
+	private List<MethodInformation> staticMethods = new ArrayList<MethodInformation>();
+	
+	private class SearchInformation {
+		SearchMatch match;
+		ClassInformation staticInformation;
+		
+		public SearchInformation(SearchMatch sm, ClassInformation ci) {
+			this.match = sm;
+			this.staticInformation = ci;
+		}
+	}
+	
+	private class MethodInformation {
+		IMethodBinding methodBinding;
+		ClassInformation staticInformation;
+		
+		public MethodInformation(IMethodBinding methodBinding, ClassInformation staticInformation) {
+			this.methodBinding = methodBinding;
+			this.staticInformation = staticInformation;
+		}
+	}
 
 	
 	@Override
@@ -68,20 +88,23 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 		//Get all static methods
 		for (ClassInformation unit : units)
 		{
-			StaticMethodVisitor visitor = new StaticMethodVisitor();
+			StaticMethodVisitor visitor = new StaticMethodVisitor(unit);
 			unit.compilationUnit.accept(visitor);
-			staticMethods.addAll(visitor.getStaticMethods());
+			
+			for(IMethodBinding b : visitor.getStaticMethods())
+				staticMethods.add(new MethodInformation(b, unit));
+			
 			
 		}
 		
 		
-		final Set<SearchMatch> invocations = new HashSet<SearchMatch>();
+		final Set<SearchInformation> invocations = new HashSet<SearchInformation>();
 		
-		for (IMethodBinding method : staticMethods)
+		for (final MethodInformation method : staticMethods)
 		{
 			IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
 			SearchPattern pattern = SearchPattern.createPattern(
-					method.getJavaElement(), IJavaSearchConstants.REFERENCES,
+					method.methodBinding.getJavaElement(), IJavaSearchConstants.REFERENCES,
 					SearchPattern.R_EXACT_MATCH);
 			SearchEngine engine = new SearchEngine();
 			
@@ -96,7 +119,7 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 								if (match.getAccuracy() == SearchMatch.A_ACCURATE
 										&& !match.isInsideDocComment())
 									
-									invocations.add(match);
+									invocations.add(new SearchInformation(match, method.staticInformation));
 							}
 						}, null);
 			} catch (CoreException e) {
@@ -107,13 +130,13 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 		}
 		
 		
-		for (SearchMatch result : invocations) {
+		for (SearchInformation result : invocations) {
 			
 			
 		
 			
 			
-			Object element = result.getElement();
+			Object element = result.match.getElement();
 			
 			
 			if (element instanceof IMember) {
@@ -123,13 +146,13 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 				//ISourceRange range = null;
 				try {
 					//range = result..getSourceRange();
-					System.out.println(result.getOffset());
+					System.out.println(result.match.getOffset());
 					
 					
 					IBuffer buf = null;
 					
 					buf = unit.getBuffer();
-					final int start = result.getOffset();
+					final int start = result.match.getOffset();
 					String contents = buf.getContents();
 					Document doc = new Document(contents);
 					
@@ -138,7 +161,7 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 					
 				
 			
-				ASTNode nodeWithSmell = getNodeWithSmell(result, cUnit);
+				ASTNode nodeWithSmell = getNodeWithSmell(result.match, cUnit);
 				
 				//int lineNumber = unit.getLineNumber(node.getStartPosition());
 				if (isSmell(nodeWithSmell)) {
@@ -149,7 +172,7 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 						line-1, 
 						cUnit, 
 						unit, 
-						nodeWithSmell);
+						nodeWithSmell, result.staticInformation.compilationUnit);
 				
 				detectedSmells.add(smell);
 				
