@@ -1,3 +1,4 @@
+
 package peifedorentos.smelldetectors.dependencyCreation;
 
 import java.util.ArrayList;
@@ -49,8 +50,6 @@ import peifedorentos.util.ASTUtils;
 import peifedorentos.visitors.ClassInstanceCreationVisitor;
 import peifedorentos.visitors.StaticMethodVisitor;
 
-//Get all static methods
-//Search for calls in all compilation units
 
 
 public class StaticMethodCallSmellDetector implements ISmellDetector {
@@ -274,3 +273,4 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 	
 
 }
+

@@ -85,10 +85,8 @@ public class StaticCallRefactoring extends Refactoring {
 		// TODO Auto-generated method stub
 		ASTNode node = smell.getNodeWithSmell();
 		
+
 		CreateAdapterVisitor vis = new CreateAdapterVisitor();
-		
-		
-		smell.getStaticClassUnit().accept(vis);
 		
 	}
 
