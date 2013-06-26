@@ -88,6 +88,8 @@ public class StaticCallRefactoring extends Refactoring {
 
 		CreateAdapterVisitor vis = new CreateAdapterVisitor();
 		
+		MethodDeclaration md = findParentMethodDeclaration(node);
+		
 	}
 
 	private void processAssignment(Assignment node) {
