@@ -52,7 +52,8 @@ public class StaticCallRefactoring extends Refactoring {
 	private static int varCount = 1;
 	private ASTRewrite rewrite;
 	
-	private boolean multipleCalls = false;
+	private boolean newAdapter = false;
+	private String adapterName;
 	
 	
 	public StaticCallRefactoring(ISmell smell) {
@@ -313,12 +314,24 @@ public class StaticCallRefactoring extends Refactoring {
 		return edit.getClass() == MultiTextEdit.class && !edit.hasChildren();
 	}
 
-	private boolean isMultipleCalls() {
-		return multipleCalls;
+
+
+	public boolean isNewAdapter() {
+		return newAdapter;
 	}
 
-	private void setMultipleCalls(boolean multipleCalls) {
-		this.multipleCalls = multipleCalls;
+	public RefactoringStatus setNewAdapter(boolean newAdapter) {
+		this.newAdapter = newAdapter;
+		return new RefactoringStatus();
+	}
+
+	public String getAdapterName() {
+		return adapterName;
+	}
+
+	public RefactoringStatus setAdapterName(String adapterName) {
+		this.adapterName = adapterName;
+		return new RefactoringStatus();
 	}
 
 
