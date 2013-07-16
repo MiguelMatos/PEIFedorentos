@@ -59,6 +59,12 @@ public class StaticCallInputPage extends UserInputWizardPage {
 		setControl(result);
 		final Button btnCreateNew = new Button(result, SWT.CHECK);
 		final Combo comboAdapters = new Combo(result, SWT.NONE);
+		
+		
+		for (String s : adapters) {
+			comboAdapters.add(s);
+		}
+		
 		comboAdapters.setBounds(177, 41, 209, 23);
 		comboAdapters.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent arg0) {

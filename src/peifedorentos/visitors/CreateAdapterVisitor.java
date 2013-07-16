@@ -5,14 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.PrimitiveType;
@@ -30,6 +35,8 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
+import peifedorentos.smells.ISmell;
+
 public class CreateAdapterVisitor extends ASTVisitor {
 
 	// Package declaration (adapters)
@@ -39,14 +46,22 @@ public class CreateAdapterVisitor extends ASTVisitor {
 
 	private AST adapterAST;
 	private CompilationUnit adapterCompilationUnit;
-	private Name packageName;
-	private Name typeName;
+	private String packageName;
+	private String typeName;
+	
+	private String newPackageName;
+	private String newTypeName;
+	
 	private List<MethodDeclaration> methodDeclarations;
+	private ISmell smell;
 
-	public CreateAdapterVisitor() {
+	public CreateAdapterVisitor(String packageName, String typeName, ISmell smell) {
 		adapterAST = AST.newAST(AST.JLS3);
 		adapterCompilationUnit = adapterAST.newCompilationUnit();
 		methodDeclarations = new ArrayList<MethodDeclaration>();
+		this.newPackageName = packageName;
+		this.newTypeName = typeName;
+		this.smell = smell;
 	}
 
 	public boolean visit(MethodDeclaration node) {
@@ -60,12 +75,12 @@ public class CreateAdapterVisitor extends ASTVisitor {
 	}
 
 	public boolean visit(PackageDeclaration node) {
-		this.packageName = node.getName();
+		this.packageName = node.getName().getFullyQualifiedName();
 		return true;
 	}
 
 	public boolean visit(TypeDeclaration node) {
-		this.typeName = node.getName();
+		this.typeName = node.getName().getFullyQualifiedName();
 		return true;
 	}
 
@@ -78,19 +93,29 @@ public class CreateAdapterVisitor extends ASTVisitor {
 		// Package
 		PackageDeclaration packageDeclaration = adapterAST
 				.newPackageDeclaration();
-		packageDeclaration.setName(adapterAST.newName("adapters"));
+		packageDeclaration.setName(adapterAST.newName("staticAdapters"));
 		adapterCompilationUnit.setPackage(packageDeclaration);
 
 		// Imports
 		ImportDeclaration importDeclaration = adapterAST.newImportDeclaration();
-		String[] names = packageName.getFullyQualifiedName().split(".");
+		
+		String[] names;
+		if (packageName.contains(".")) {
+			names = packageName.split(".");
+		}
+		else
+		{
+			names = new String[1];
+			names[0] = packageName;
+		}
+
 		String[] namesType = new String[names.length + 1];
 		int i = 0;
 		for (String s : names) {
 			namesType[i] = s;
 			i++;
 		}
-		namesType[i] = this.typeName.getFullyQualifiedName();
+		namesType[i] = this.typeName;
 		Name completeName = adapterAST.newName(namesType);
 		importDeclaration.setName(completeName);
 		importDeclaration.setOnDemand(false);
@@ -99,14 +124,23 @@ public class CreateAdapterVisitor extends ASTVisitor {
 		// Type and body
 		TypeDeclaration classDec = adapterAST.newTypeDeclaration();
 		classDec.setInterface(false);
-		classDec.setName(adapterAST.newSimpleName(typeName
-				.getFullyQualifiedName()));
+		
+		MarkerAnnotation annot = adapterAST.newMarkerAnnotation();
+		annot.setTypeName(adapterAST.newSimpleName("Adapter"));
+		
+		classDec.modifiers().add(annot);
+		
+		classDec.modifiers().add(
+				adapterAST.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+		classDec.setName(adapterAST.newSimpleName(newTypeName));
 
 		// body
 		for (MethodDeclaration oldMethodDeclaration : methodDeclarations) {
 			MethodDeclaration newMethodDeclaration = adapterAST
 					.newMethodDeclaration();
 
+			newMethodDeclaration.modifiers().add(
+					adapterAST.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 			newMethodDeclaration.setName(adapterAST
 					.newSimpleName(oldMethodDeclaration.getName()
 							.getFullyQualifiedName()));
@@ -143,8 +177,7 @@ public class CreateAdapterVisitor extends ASTVisitor {
 			ReturnStatement returnStatement = adapterAST.newReturnStatement();
 			MethodInvocation methodInvocation = adapterAST
 					.newMethodInvocation();
-			SimpleName className = adapterAST.newSimpleName(typeName
-					.getFullyQualifiedName());
+			SimpleName className = adapterAST.newSimpleName(typeName);
 			SimpleName methodName = adapterAST
 					.newSimpleName(oldMethodDeclaration.getName()
 							.getFullyQualifiedName());
@@ -186,6 +219,15 @@ public class CreateAdapterVisitor extends ASTVisitor {
 		try {
 			te.apply(doc);
 		} catch (MalformedTreeException | BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		IJavaElement el = smell.getICompilationUnit().getAncestor(
+				IJavaElement.PACKAGE_FRAGMENT_ROOT);
+		
+		try {
+			ICompilationUnit cu = ((IPackageFragmentRoot) el).createPackageFragment(newPackageName, true, null).createCompilationUnit(newTypeName + ".java", doc.get(), false, null);
+		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

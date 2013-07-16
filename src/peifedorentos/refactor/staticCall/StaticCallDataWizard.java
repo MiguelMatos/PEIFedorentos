@@ -16,7 +16,7 @@ public class StaticCallDataWizard extends RefactoringWizard {
 
 	@Override
 	protected void addUserInputPages() {
-		//addPage(new StaticCallInputPage("StaticCallInputPage"));
+		addPage(new StaticCallInputPage("StaticCallInputPage"));
 	}
 
 }
