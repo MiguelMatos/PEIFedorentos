@@ -14,6 +14,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -42,6 +43,7 @@ import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.smells.ISmell;
 import peifedorentos.smells.StaticCallSmell;
 import peifedorentos.visitors.CreateAdapterVisitor;
+import peifedorentos.visitors.StaticMethodCallRefactoringVisitor;
 
 public class StaticCallRefactoring extends Refactoring {
 
@@ -54,6 +56,7 @@ public class StaticCallRefactoring extends Refactoring {
 	
 	private boolean newAdapter = false;
 	private String adapterName;
+
 	
 	
 	public StaticCallRefactoring(ISmell smell) {
@@ -82,9 +85,11 @@ public class StaticCallRefactoring extends Refactoring {
 	private void refactor(IProgressMonitor monitor) {
 		
 		
-		
 		// TODO Auto-generated method stub
 		ASTNode node = smell.getNodeWithSmell();
+		
+		ImportRewrite importRewrite = ImportRewrite.create(
+				smell.getCompilationUnit(), true);
 		
 		if (this.newAdapter) {
 			CreateAdapterVisitor vis = new CreateAdapterVisitor("staticAdapters", adapterName, smell);
@@ -92,8 +97,11 @@ public class StaticCallRefactoring extends Refactoring {
 			
 		}
 
-		MethodDeclaration md = findParentMethodDeclaration(node);
+		StaticMethodCallRefactoringVisitor refVisitor = new StaticMethodCallRefactoringVisitor(smell, adapterName, "staticAdapters", rewrite);
+		smell.getCompilationUnit().accept(refVisitor);
 		
+		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
+	
 	}
 
 	private void processAssignment(Assignment node) {

@@ -171,7 +171,9 @@ public class StaticMethodCallSmellDetector implements ISmellDetector {
 						line-1, 
 						cUnit, 
 						unit, 
-						nodeWithSmell, result.staticInformation.compilationUnit);
+						nodeWithSmell, result.staticInformation.compilationUnit,
+						nodeWithSmell.toString()
+						);
 				
 				detectedSmells.add(smell);
 				
