@@ -1,5 +1,7 @@
 package peifedorentos.smells;
 
+import java.util.ArrayList;
+
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -17,6 +19,7 @@ public class DependencyCreationSmell extends Smell {
 
 		this.classDependencyName = classDependencyName;
 		this.classDependencyNamespace = namespace;
+		
 	}
 	
 	public String getClassDependencyName() {
@@ -26,5 +29,6 @@ public class DependencyCreationSmell extends Smell {
 	public Name getClassDependencyNamespace() {
 		return this.classDependencyNamespace;
 	}
+	
 
 }

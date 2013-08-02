@@ -2,6 +2,8 @@ package peifedorentos.refactor.structures;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -14,6 +16,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -45,7 +48,7 @@ public class FactoryCreator {
 
 	@SuppressWarnings("unchecked")
 	public ICompilationUnit CreateFactory(String packageName, String className,
-			String typeName, Name importName, IPackageFragmentRoot project) throws JavaModelException {
+			String typeName, Name importName, IPackageFragmentRoot project, ASTNode originalCall, List<ASTNode> params) throws JavaModelException {
 		ast = AST.newAST(AST.JLS3);
 		unit = ast.newCompilationUnit();
 
@@ -80,7 +83,7 @@ public class FactoryCreator {
 				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 		type.setName(ast.newSimpleName(className));
 		
-		
+		aaa
 
 		MethodDeclaration method = ast.newMethodDeclaration();
 		method.setConstructor(false);
@@ -88,6 +91,12 @@ public class FactoryCreator {
 				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 		method.setName(ast.newSimpleName("CreateInstance"));
 		method.setReturnType2(ast.newSimpleType(ast.newSimpleName(typeName)));
+		
+		for (Object o : ((ClassInstanceCreation)originalCall).arguments()) {
+			if (o instanceof ASTNode) {
+				
+			}
+		}
 
 		Block body = ast.newBlock();
 		ReturnStatement ret = ast.newReturnStatement();

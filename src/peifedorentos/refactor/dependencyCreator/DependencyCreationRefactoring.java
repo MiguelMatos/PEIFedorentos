@@ -17,11 +17,14 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -37,6 +40,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -166,11 +170,14 @@ public class DependencyCreationRefactoring extends Refactoring {
 			IJavaElement el = smell.getICompilationUnit().getAncestor(
 					IJavaElement.PACKAGE_FRAGMENT_ROOT);
 
-	
+		List<ASTNode> constructorParam;
+		
+		constructorParam = GetConstructorParameters((ClassInstanceCreation) smell.getNodeWithSmell());
 			
 		ICompilationUnit factory = createFactory(
 						smell.getClassDependencyName(),
-						smell.getClassDependencyNamespace(), factoryTypeName, ((IPackageFragmentRoot) el));
+						smell.getClassDependencyNamespace(), factoryTypeName, ((IPackageFragmentRoot) el), smell.getNodeWithSmell(),
+						constructorParam);
 
 
 		}
@@ -200,14 +207,73 @@ public class DependencyCreationRefactoring extends Refactoring {
 
 		newMethod.accept(visitor);
 
+		
+		if (helper.GetVariableDeclariationFragmentParent(node) != null) {
 		VariableDeclarationFragment newVarDecFrag = changeVariableDeclarationFragment(node);
 		rewrite.replace(helper.GetVariableDeclariationFragmentParent(node),
 				newVarDecFrag, null);
+		}
+		else
+		{
+			Assignment ass = helper.GetAssignmentParent(node);
+			MethodInvocation methodInv = helper.CreateMethodInvocation(
+					factoryVarName + getFactoryTypeName(), "CreateInstance");
+			
+			rewrite.replace(ass.getRightHandSide(), methodInv, null);
+		}		
 
 		// rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
 
 		rewriteAST(smell.getICompilationUnit(), rewrite, importRewrite);
 
+	}
+	
+	private List<ASTNode> GetConstructorParameters(ClassInstanceCreation cic) {
+		final List<ASTNode> params = new ArrayList<ASTNode>();
+		
+		IMethodBinding mbind = cic.resolveConstructorBinding();
+		//IMethodBinding mbind = mi.resolveMethodBinding();
+		IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
+		SearchPattern pattern = SearchPattern.createPattern(
+				mbind.getJavaElement(), IJavaSearchConstants.METHOD,
+				SearchPattern.R_EXACT_MATCH);
+		
+		
+		
+		SearchEngine engine = new SearchEngine();
+		try {
+			engine.search(pattern, new SearchParticipant[] { SearchEngine
+					.getDefaultSearchParticipant() }, scope,
+					new SearchRequestor() {
+
+						@Override
+						public void acceptSearchMatch(SearchMatch match)
+								throws CoreException {
+							if (match.getAccuracy() == SearchMatch.A_ACCURATE
+									&& !match.isInsideDocComment())
+								if (match.getElement() instanceof IMethod)
+								{
+									ICompilationUnit unit = ((IMethod) match.getElement()).getCompilationUnit();
+									CompilationUnit cUnit = parse(unit);
+									MethodDeclaration node = (MethodDeclaration) cUnit.findDeclaringNode(((IMethod) match.getElement()).getKey());
+									
+									for (Object o : node.parameters())
+									{
+										params.add((ASTNode) o);
+									}
+								}
+								return;
+								//invocations.add(match);
+						}
+					}, null);
+		} catch (CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
+		
+		return params;
 	}
 
 	private void updateReferences(IProgressMonitor monitor,
@@ -264,11 +330,11 @@ public class DependencyCreationRefactoring extends Refactoring {
 	}
 
 	private ICompilationUnit createFactory(String objName, Name importName, String factoryName,
-			IPackageFragmentRoot project) {
+			IPackageFragmentRoot project, ASTNode nodeWithSmell, List<ASTNode> params) {
 		FactoryCreator fact = new FactoryCreator();
 		try {
 			return fact.CreateFactory("factories", factoryName,
-					objName, importName, project);
+					objName, importName, project, nodeWithSmell, params);
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

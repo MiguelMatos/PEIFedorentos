@@ -4,6 +4,7 @@ import java.beans.Expression;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
@@ -163,6 +164,19 @@ public SingleVariableDeclaration CreateSingleVariableDeclaration(String paramete
 				return GetVariableDeclariationFragmentParent(node.getParent());
 			else
 				return (VariableDeclarationFragment) node.getParent();
+		}
+		
+		return null;
+	}
+	
+	
+	public Assignment GetAssignmentParent(ASTNode node) 
+	{
+		if (node.getParent() != null) {
+			if (!(node.getParent() instanceof Assignment))
+				return GetAssignmentParent(node.getParent());
+			else
+				return (Assignment) node.getParent();
 		}
 		
 		return null;
