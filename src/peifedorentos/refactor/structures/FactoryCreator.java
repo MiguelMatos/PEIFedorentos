@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.internal.corext.dom.ASTFlattener;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 
 import peifedorentos.Activator;
+import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.util.ActiveEditor;
 
 @SuppressWarnings("restriction")
@@ -83,7 +85,7 @@ public class FactoryCreator {
 				ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 		type.setName(ast.newSimpleName(className));
 		
-		aaa
+		
 
 		MethodDeclaration method = ast.newMethodDeclaration();
 		method.setConstructor(false);
@@ -92,17 +94,30 @@ public class FactoryCreator {
 		method.setName(ast.newSimpleName("CreateInstance"));
 		method.setReturnType2(ast.newSimpleType(ast.newSimpleName(typeName)));
 		
-		for (Object o : ((ClassInstanceCreation)originalCall).arguments()) {
-			if (o instanceof ASTNode) {
+		ClassInstanceCreation instance = ast.newClassInstanceCreation();
+		instance.setType(ast.newSimpleType(ast.newSimpleName(typeName)));
+		
+		RefactorHelper helper = new RefactorHelper(ast);
+		
+		for (ASTNode o : params) {
+			if (o instanceof SingleVariableDeclaration) {
+				SingleVariableDeclaration newVarDec = 
+						helper.CreateSingleVariableDeclaration(((SingleVariableDeclaration) o).getName().toString(), ((SingleVariableDeclaration) o).getType());
 				
+					
+				method.parameters().add(newVarDec);
+				
+				instance.arguments().add(ast.newSimpleName(((SingleVariableDeclaration) o).getName().toString()));
 			}
+			
+			
 		}
 
 		Block body = ast.newBlock();
 		ReturnStatement ret = ast.newReturnStatement();
 
-		ClassInstanceCreation instance = ast.newClassInstanceCreation();
-		instance.setType(ast.newSimpleType(ast.newSimpleName(typeName)));
+		
+		
 
 		ret.setExpression(instance);
 		body.statements().add(ret);

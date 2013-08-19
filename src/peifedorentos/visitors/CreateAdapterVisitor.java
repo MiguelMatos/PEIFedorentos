@@ -35,6 +35,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
+import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.smells.ISmell;
 
 public class CreateAdapterVisitor extends ASTVisitor {
@@ -145,8 +146,18 @@ public class CreateAdapterVisitor extends ASTVisitor {
 					.newSimpleName(oldMethodDeclaration.getName()
 							.getFullyQualifiedName()));
 			// newMethodDeclaration.modifiers().add("public");
-			newMethodDeclaration.parameters().addAll(
-					oldMethodDeclaration.parameters());
+			RefactorHelper helper = new RefactorHelper(adapterAST);
+			
+			for (Object var : oldMethodDeclaration.parameters()) {
+				if (var instanceof SingleVariableDeclaration)
+				{
+					
+					SingleVariableDeclaration dec = helper.CreateSingleVariableDeclaration(((SingleVariableDeclaration) var).getName().toString(), ((SingleVariableDeclaration) var).getType());
+					
+					newMethodDeclaration.parameters().add(dec);
+					
+				}
+			}
 
 			Type returnType = oldMethodDeclaration.getReturnType2();
 

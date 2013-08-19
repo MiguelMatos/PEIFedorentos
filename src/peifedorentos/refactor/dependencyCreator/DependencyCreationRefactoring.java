@@ -230,7 +230,7 @@ public class DependencyCreationRefactoring extends Refactoring {
 	
 	private List<ASTNode> GetConstructorParameters(ClassInstanceCreation cic) {
 		final List<ASTNode> params = new ArrayList<ASTNode>();
-		
+		params.clear();
 		IMethodBinding mbind = cic.resolveConstructorBinding();
 		//IMethodBinding mbind = mi.resolveMethodBinding();
 		IJavaSearchScope scope = SearchEngine.createWorkspaceScope();

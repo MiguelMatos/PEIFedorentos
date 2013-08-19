@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -36,6 +37,8 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 	private Map<String, Name> imports;
 	private Name packageDec;
 	private ClassInformation classInformation;
+	private String currentTypeName;
+	
 	
 	public ClassInstanceCreationVisitor(ClassInformation classInformation, List<String> projectObjects) {
 		this.classInformation =classInformation;
@@ -44,9 +47,20 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 		this.imports = new HashMap<String, Name>();
 	}
 	
+	public boolean visit(Annotation node) {
+		
+		if (node.getTypeName().toString().equals("Factory")) {
+			return false;
+		}
+		return true;
+	
+		
+	}
+	
 	@Override
 	public boolean visit(TypeDeclaration node) {
 		
+		currentTypeName = node.getName().toString();
 		
 		for (Object mod : node.modifiers())
 		{
@@ -86,6 +100,8 @@ public class ClassInstanceCreationVisitor extends ASTVisitor {
 	@Override  
 	public boolean visit(ClassInstanceCreation node) {
 		
+		if (currentMethod.equals("main"))
+			return true;
 		//Detecta news
 		//Excluir os que são new de classes do java
 		
