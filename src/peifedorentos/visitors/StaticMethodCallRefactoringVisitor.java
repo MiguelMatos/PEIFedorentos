@@ -1,5 +1,7 @@
 package peifedorentos.visitors;
 
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -8,12 +10,15 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.swt.events.HelpEvent;
 
+import peifedorentos.refactor.RefactorHelper;
 import peifedorentos.smells.StaticCallSmell;
 
 public class StaticMethodCallRefactoringVisitor extends ASTVisitor  {
@@ -26,12 +31,14 @@ public class StaticMethodCallRefactoringVisitor extends ASTVisitor  {
 	ASTRewrite rewrite;
 	
 	
+	
 	public StaticMethodCallRefactoringVisitor(StaticCallSmell smell, String adapterName, String importName, ASTRewrite rw) {
 		this.smell = smell;
 		this.adapterName = adapterName;
 		this.importName = importName;
 		this.varName = smell.getStaticMethodName() + "Adapter";
 		this.rewrite = rw;
+		
 	}
 
 	public boolean visit(MethodDeclaration node) {
@@ -72,6 +79,19 @@ public class StaticMethodCallRefactoringVisitor extends ASTVisitor  {
 			Expression exp = smell.getCompilationUnit().getAST().newSimpleName(this.varName);
 			newInv.setName(smell.getCompilationUnit().getAST().newSimpleName(node.getName().getFullyQualifiedName()));
 			newInv.setExpression(exp);
+			
+			RefactorHelper helper = new RefactorHelper(node.getAST());	
+			for (Object var : node.arguments()) {
+				if (var instanceof SimpleName)
+				{
+					SimpleName name = helper.CreateSimpleName(((SimpleName) var).getFullyQualifiedName());
+					//SingleVariableDeclaration dec = helper.CreateSingleVariableDeclaration(((SingleVariableDeclaration) var).getName().toString(), ((SingleVariableDeclaration) var).getType());
+					
+					newInv.arguments().add(name);
+					
+				}
+			
+			}
 			rewrite.replace(node, newInv, null);
 			
 		}

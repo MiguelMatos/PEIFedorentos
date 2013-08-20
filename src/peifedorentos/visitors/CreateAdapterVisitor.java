@@ -54,20 +54,30 @@ public class CreateAdapterVisitor extends ASTVisitor {
 	private String newTypeName;
 	
 	private List<MethodDeclaration> methodDeclarations;
+	private List<ImportDeclaration> importDeclarations;
 	private ISmell smell;
+	
+	
 
 	public CreateAdapterVisitor(String packageName, String typeName, ISmell smell) {
 		adapterAST = AST.newAST(AST.JLS3);
 		adapterCompilationUnit = adapterAST.newCompilationUnit();
 		methodDeclarations = new ArrayList<MethodDeclaration>();
+		importDeclarations = new ArrayList<ImportDeclaration>();
 		this.newPackageName = packageName;
 		this.newTypeName = typeName;
 		this.smell = smell;
 	}
+	
+	public boolean visit(ImportDeclaration node) {
+		importDeclarations.add(node);
+		return true;
+		
+	}
 
 	public boolean visit(MethodDeclaration node) {
 		for (Object modifier : node.modifiers()) {
-			if (modifier.toString().equals("static")) {
+			if (modifier.toString().equals("static") && !node.getName().toString().equals("main")) {
 				methodDeclarations.add(node);
 				break;
 			}
@@ -121,6 +131,13 @@ public class CreateAdapterVisitor extends ASTVisitor {
 		importDeclaration.setName(completeName);
 		importDeclaration.setOnDemand(false);
 		adapterCompilationUnit.imports().add(importDeclaration);
+		
+		for (ImportDeclaration imp : importDeclarations) {
+			ImportDeclaration newImp = adapterAST.newImportDeclaration();
+			newImp.setName(adapterAST.newName(imp.getName().getFullyQualifiedName()));
+			newImp.setOnDemand(false);
+			adapterCompilationUnit.imports().add(newImp);
+		}
 
 		// Type and body
 		TypeDeclaration classDec = adapterAST.newTypeDeclaration();
